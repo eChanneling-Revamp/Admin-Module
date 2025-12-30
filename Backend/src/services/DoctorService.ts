@@ -6,10 +6,8 @@ export class DoctorService {
     try {
       logger.info('Starting to fetch all doctors from database');
       
+      // Fetch all doctors for admin panel (including inactive ones)
       const doctors = await prisma.doctor.findMany({
-        where: { 
-          isActive: true 
-        },
         select: {
           id: true,
           name: true,
@@ -27,6 +25,9 @@ export class DoctorService {
           isActive: true,
           createdAt: true,
           status: true
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
       });
 

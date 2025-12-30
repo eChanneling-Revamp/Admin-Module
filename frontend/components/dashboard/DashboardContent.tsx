@@ -1,364 +1,421 @@
 'use client';
 
-import { FC, useState, useCallback } from 'react';
+import { FC, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  Box,
-  Grid,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  Button,
-  Stack,
-} from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Description as FileTextIcon,
-  Settings as SettingsIcon,
-  MoreHoriz as MoreHorizIcon,
-} from '@mui/icons-material';
-import { MuiStatsCard } from '@/components/dashboard/MuiStatsCard';
-import { MuiTopMetrics } from '@/components/dashboard/MuiTopMetrics';
-import { MuiCharts } from '@/components/dashboard/MuiCharts';
-import { MuiLineChart } from '@/components/dashboard/MuiLineChart';
-import { MuiAdvancedFilters } from '@/components/dashboard/MuiAdvancedFilters';
-import { MuiActivityFeed } from '@/components/dashboard/MuiActivityFeed';
-import { MuiQuickActions } from '@/components/dashboard/MuiQuickActions';
+  Calendar,
+  Users,
+  DollarSign,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  TrendingUp,
+  CreditCard,
+  UserPlus,
+  FileText,
+  Settings,
+  RefreshCw,
+  ChevronRight,
+  Stethoscope,
+  Building2,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface DashboardContentProps {}
 
 export const DashboardContent: FC<DashboardContentProps> = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [greeting, setGreeting] = useState('');
 
-  // Mock data for stats cards
-  const statsData = [
-    {
-      title: 'Total Appointments',
-      value: '1,234',
-      icon: 'calendar',
-      trend: 12.5,
-      color: 'primary' as const,
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good Morning');
+    else if (hour < 17) setGreeting('Good Afternoon');
+    else setGreeting('Good Evening');
+    return () => clearInterval(timer);
+  }, []);
+
+  // Stats data - Telecom colors
+  const stats = [
+    { 
+      title: 'Total Appointments', 
+      value: '1,234', 
+      change: '+12.5%', 
+      trend: 'up',
+      icon: Calendar,
+      gradient: 'from-cyan-500 to-teal-500',
+      lightColor: 'bg-gradient-to-br from-cyan-50 to-teal-50',
+      textColor: 'text-cyan-600'
     },
-    {
-      title: 'Active Patients',
-      value: '567',
-      icon: 'users',
-      trend: 8.2,
-      color: 'success' as const,
+    { 
+      title: 'Active Patients', 
+      value: '567', 
+      change: '+8.2%', 
+      trend: 'up',
+      icon: Users,
+      gradient: 'from-teal-500 to-emerald-500',
+      lightColor: 'bg-gradient-to-br from-teal-50 to-emerald-50',
+      textColor: 'text-teal-600'
     },
-    {
-      title: 'Total Revenue',
-      value: '$45,231',
-      icon: 'trending',
-      trend: -3.1,
-      color: 'error' as const,
+    { 
+      title: 'Total Revenue', 
+      value: 'Rs. 4.5M', 
+      change: '+15.3%', 
+      trend: 'up',
+      icon: DollarSign,
+      gradient: 'from-blue-500 to-cyan-500',
+      lightColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+      textColor: 'text-blue-600'
     },
-    {
-      title: 'Pending Tasks',
-      value: '89',
-      icon: 'task',
-      trend: 5.7,
-      color: 'warning' as const,
+    { 
+      title: 'Active Doctors', 
+      value: '48', 
+      change: '+3', 
+      trend: 'up',
+      icon: Stethoscope,
+      gradient: 'from-indigo-500 to-blue-500',
+      lightColor: 'bg-gradient-to-br from-indigo-50 to-blue-50',
+      textColor: 'text-indigo-600'
     },
   ];
 
-  // Mock data for top metrics
-  const metricsData = [
-    { id: '1', label: 'Today Appointments', value: 42, change: 5, icon: 'appointment', trend: 'up' as const },
-    { id: '2', label: 'New Patients', value: 18, change: 12, icon: 'newpatient', trend: 'up' as const },
-    { id: '3', label: 'Revenue Today', value: 3450, change: -2, icon: 'revenue', trend: 'down' as const },
-    { id: '4', label: 'Satisfaction Rate', value: 94, change: 8, icon: 'satisfaction', trend: 'up' as const },
+  // Today's summary - Telecom colors
+  const todaySummary = [
+    { label: 'Appointments Today', value: 42, icon: Calendar, color: 'text-cyan-600', bg: 'bg-gradient-to-br from-cyan-50 to-teal-50' },
+    { label: 'Completed', value: 28, icon: CheckCircle, color: 'text-teal-600', bg: 'bg-gradient-to-br from-teal-50 to-emerald-50' },
+    { label: 'Pending', value: 10, icon: Clock, color: 'text-blue-600', bg: 'bg-gradient-to-br from-blue-50 to-cyan-50' },
+    { label: 'Cancelled', value: 4, icon: XCircle, color: 'text-rose-600', bg: 'bg-gradient-to-br from-rose-50 to-pink-50' },
   ];
 
-  // Mock data for bar chart
-  const barChartData = [
-    { month: 'Jan', appointments: 400, revenue: 2400 },
-    { month: 'Feb', appointments: 300, revenue: 1398 },
-    { month: 'Mar', appointments: 200, revenue: 9800 },
-    { month: 'Apr', appointments: 278, revenue: 3908 },
-    { month: 'May', appointments: 189, revenue: 4800 },
-    { month: 'Jun', appointments: 239, revenue: 3800 },
-  ];
-
-  // Mock data for pie chart
-  const pieChartData = [
-    { name: 'Completed', value: 45, color: '#10b981' },
-    { name: 'Pending', value: 25, color: '#f59e0b' },
-    { name: 'Cancelled', value: 20, color: '#ef4444' },
-    { name: 'Scheduled', value: 10, color: '#3b82f6' },
-  ];
-
-  // Mock data for line chart
-  const lineChartData = [
-    { name: 'Jan', revenue: 4000, patients: 240, appointments: 80 },
-    { name: 'Feb', revenue: 3000, patients: 221, appointments: 100 },
-    { name: 'Mar', revenue: 2000, patients: 229, appointments: 120 },
-    { name: 'Apr', revenue: 2780, patients: 200, appointments: 90 },
-    { name: 'May', revenue: 1890, patients: 229, appointments: 110 },
-    { name: 'Jun', revenue: 2390, patients: 200, appointments: 130 },
-    { name: 'Jul', revenue: 3490, patients: 210, appointments: 100 },
-  ];
-
-  // Mock data for activity feed
-  const activityData = [
-    {
-      id: '1',
-      title: 'New appointment booked',
-      message: 'John Doe booked an appointment',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      type: 'success' as const,
-      icon: 'check',
-      read: false,
-    },
-    {
-      id: '2',
-      title: 'Appointment cancelled',
-      message: 'Jane Smith cancelled her appointment',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      type: 'error' as const,
-      icon: 'close',
-      read: false,
-    },
-    {
-      id: '3',
-      title: 'Patient profile updated',
-      message: 'Mike Johnson updated his profile information',
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      type: 'info' as const,
-      icon: 'info',
-      read: true,
-    },
-    {
-      id: '4',
-      title: 'Payment received',
-      message: 'Payment of $150 received from Sarah Lee',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      type: 'success' as const,
-      icon: 'check',
-      read: true,
-    },
-    {
-      id: '5',
-      title: 'System alert',
-      message: 'Backup completed successfully',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      type: 'alert' as const,
-      icon: 'warning',
-      read: true,
-    },
-  ];
-
-  // Quick actions data
+  // Quick actions - Telecom style with glass effect
   const quickActions = [
-    {
-      id: 'new-appointment',
-      label: 'New Appointment',
-      icon: <AddIcon />,
-      tooltip: 'Schedule a new appointment',
-      color: 'primary' as const,
-      onClick: () => console.log('New appointment clicked'),
+    { 
+      label: 'New Appointment', 
+      icon: Calendar, 
+      href: '/dashboard/appointments', 
+      gradient: 'from-cyan-500 to-teal-500',
+      shadow: 'shadow-cyan-500/25'
     },
-    {
-      id: 'new-patient',
-      label: 'New Patient',
-      icon: <AddIcon />,
-      tooltip: 'Register a new patient',
-      color: 'success' as const,
-      onClick: () => console.log('New patient clicked'),
+    { 
+      label: 'Add Patient', 
+      icon: UserPlus, 
+      href: '/dashboard/customers', 
+      gradient: 'from-teal-500 to-emerald-500',
+      shadow: 'shadow-teal-500/25'
     },
-    {
-      id: 'manage-doctors',
-      label: 'Manage Doctors',
-      icon: <EditIcon />,
-      tooltip: 'Manage doctor profiles',
-      color: 'info' as const,
-      onClick: () => console.log('Manage doctors clicked'),
+    { 
+      label: 'View Payments', 
+      icon: CreditCard, 
+      href: '/dashboard/payments', 
+      gradient: 'from-blue-500 to-cyan-500',
+      shadow: 'shadow-blue-500/25'
     },
-    {
-      id: 'reports',
-      label: 'Reports',
-      icon: <FileTextIcon />,
-      tooltip: 'Generate reports',
-      color: 'warning' as const,
-      onClick: () => console.log('Reports clicked'),
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: <SettingsIcon />,
-      tooltip: 'Open settings',
-      color: 'secondary' as const,
-      onClick: () => console.log('Settings clicked'),
-    },
-    {
-      id: 'more',
-      label: 'More',
-      icon: <MoreHorizIcon />,
-      tooltip: 'More actions',
-      color: 'inherit' as const,
-      onClick: () => console.log('More clicked'),
+    { 
+      label: 'Reports', 
+      icon: FileText, 
+      href: '/dashboard/reports', 
+      gradient: 'from-indigo-500 to-blue-500',
+      shadow: 'shadow-indigo-500/25'
     },
   ];
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setRefreshing(false);
-  }, []);
+  // Recent activities
+  const recentActivities = [
+    { id: 1, action: 'New appointment booked', patient: 'John Silva', time: '5 min ago', type: 'success' },
+    { id: 2, action: 'Payment received', patient: 'Sarah Fernando', time: '15 min ago', type: 'success' },
+    { id: 3, action: 'Appointment cancelled', patient: 'Mike Perera', time: '1 hour ago', type: 'error' },
+    { id: 4, action: 'New patient registered', patient: 'Anna Kumar', time: '2 hours ago', type: 'info' },
+    { id: 5, action: 'Refund processed', patient: 'David Raj', time: '3 hours ago', type: 'warning' },
+  ];
 
-  const handleFilterChange = useCallback((filters: any) => {
-    console.log('Filters changed:', filters);
-  }, []);
+  // Recent patients data
+  const recentPatients = [
+    { id: 1, name: 'Kamal Perera', phone: '+94 77 123 4567', lastVisit: 'Today', status: 'Active', appointments: 5, avatar: 'KP' },
+    { id: 2, name: 'Nimali Fernando', phone: '+94 76 234 5678', lastVisit: 'Yesterday', status: 'Active', appointments: 3, avatar: 'NF' },
+    { id: 3, name: 'Ruwan Silva', phone: '+94 71 345 6789', lastVisit: '2 days ago', status: 'Pending', appointments: 1, avatar: 'RS' },
+    { id: 4, name: 'Dilani Kumar', phone: '+94 78 456 7890', lastVisit: '3 days ago', status: 'Active', appointments: 8, avatar: 'DK' },
+    { id: 5, name: 'Saman Jayawardena', phone: '+94 70 567 8901', lastVisit: 'Last week', status: 'Inactive', appointments: 2, avatar: 'SJ' },
+  ];
 
-  const handleClearFilters = useCallback(() => {
-    console.log('Filters cleared');
-  }, []);
+  // Top doctors
+  const topDoctors = [
+    { name: 'Dr. Perera', specialty: 'Cardiologist', appointments: 156, rating: 4.9 },
+    { name: 'Dr. Fernando', specialty: 'Dermatologist', appointments: 142, rating: 4.8 },
+    { name: 'Dr. Silva', specialty: 'Orthopedic', appointments: 128, rating: 4.7 },
+  ];
+
 
   return (
-    <Box
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        minHeight: 'calc(100vh - 64px)',
-        p: { xs: 2, sm: 3 },
-        backgroundImage:
-          theme.palette.mode === 'dark'
-            ? 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.02) 0%, transparent 50%)',
-      }}
-    >
-      <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
-        {/* Header Section */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 4,
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              }}
-            >
-              <DashboardIcon sx={{ color: 'white', fontSize: 28 }} />
-            </Box>
-            <Box>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                Dashboard
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Welcome back! Here's your dashboard overview.
-              </Typography>
-            </Box>
-          </Box>
-
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleRefresh}
-              disabled={refreshing}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              {refreshing ? 'Refreshing...' : 'Refresh'}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/30 to-teal-50/20 p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 bg-clip-text text-transparent">{greeting}, Admin</h1>
+            <p className="text-gray-500 mt-1">
+              {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2 border-cyan-200 hover:bg-cyan-50 hover:border-cyan-300">
+              <RefreshCw className="w-4 h-4 text-cyan-600" />
+              Refresh
             </Button>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              Export
+            <Button variant="outline" size="sm" className="gap-2 border-teal-200 hover:bg-teal-50 hover:border-teal-300" onClick={() => router.push('/dashboard/settings')}>
+              <Settings className="w-4 h-4 text-teal-600" />
+              Settings
             </Button>
-          </Stack>
-        </Box>
+          </div>
+        </div>
 
-        {/* Stats Cards Section */}
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {statsData.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <MuiStatsCard {...stat} />
-            </Grid>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className={`p-2.5 rounded-xl ${stat.lightColor}`}>
+                    <stat.icon className={`w-5 h-5 ${stat.textColor}`} />
+                  </div>
+                  <div className={`flex items-center gap-1 text-xs font-medium ${stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {stat.change}
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm text-gray-500 mt-0.5">{stat.title}</p>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </div>
 
-        {/* Top Metrics Section */}
-        <Box sx={{ mb: 4 }}>
-          <MuiTopMetrics metrics={metricsData} />
-        </Box>
+        {/* Today's Summary & Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Today's Summary */}
+          <Card className="lg:col-span-2 border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Today's Summary</CardTitle>
+              <CardDescription>Overview of today's appointments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {todaySummary.map((item, index) => (
+                  <div key={index} className={`text-center p-4 ${item.bg} rounded-xl border border-white/50 hover:shadow-md transition-shadow`}>
+                    <item.icon className={`w-6 h-6 mx-auto mb-2 ${item.color}`} />
+                    <p className="text-2xl font-bold text-gray-900">{item.value}</p>
+                    <p className="text-xs text-gray-500 mt-1">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Filters Section */}
-        <Box sx={{ mb: 4 }}>
-          <MuiAdvancedFilters
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-          />
-        </Box>
+          {/* Quick Actions - Telecom Glass Style */}
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-slate-50 to-cyan-50/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Quick Actions</CardTitle>
+              <CardDescription>Frequently used actions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {quickActions.map((action, index) => (
+                <button
+                  key={index}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r ${action.gradient} text-white font-medium shadow-lg ${action.shadow} hover:shadow-xl hover:scale-[1.02] transition-all duration-200`}
+                  onClick={() => router.push(action.href)}
+                >
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <action.icon className="w-4 h-4" />
+                  </div>
+                  {action.label}
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Quick Actions Section */}
-        <Box sx={{ mb: 4 }}>
-          <MuiQuickActions actions={quickActions} />
-        </Box>
+        {/* Recent Activity & Top Doctors */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Activity */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+                <CardDescription>Latest system activities</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="text-blue-600">
+                View All <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className={`p-1.5 rounded-full ${
+                      activity.type === 'success' ? 'bg-emerald-100' :
+                      activity.type === 'error' ? 'bg-red-100' :
+                      activity.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100'
+                    }`}>
+                      {activity.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                      {activity.type === 'error' && <XCircle className="w-4 h-4 text-red-600" />}
+                      {activity.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-600" />}
+                      {activity.type === 'info' && <Activity className="w-4 h-4 text-blue-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                      <p className="text-xs text-gray-500">{activity.patient}</p>
+                    </div>
+                    <span className="text-xs text-gray-400 whitespace-nowrap">{activity.time}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
-            <MuiCharts
-              chartType="bar"
-              title="Appointments & Revenue"
-              subtitle="Monthly overview"
-              data={barChartData}
-              bars={[
-                { key: 'appointments', name: 'Appointments', color: '#3b82f6' },
-                { key: 'revenue', name: 'Revenue', color: '#10b981' },
-              ]}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <MuiCharts
-              chartType="pie"
-              title="Appointment Status"
-              subtitle="Distribution of appointments"
-              data={pieChartData}
-            />
-          </Grid>
-        </Grid>
+          {/* Top Doctors */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold">Top Doctors</CardTitle>
+                <CardDescription>This month's top performers</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => router.push('/dashboard/doctors')}>
+                View All <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topDoctors.map((doctor, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                      {doctor.name.split(' ')[1]?.charAt(0) || 'D'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{doctor.name}</p>
+                      <p className="text-xs text-gray-500">{doctor.specialty}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900">{doctor.appointments}</p>
+                      <p className="text-xs text-gray-500">appointments</p>
+                    </div>
+                    <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 hover:bg-cyan-50">
+                      ⭐ {doctor.rating}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Line Chart Section */}
-        <Box sx={{ mb: 4 }}>
-          <MuiLineChart
-            title="Trends"
-            subtitle="Revenue, patients, and appointments over time"
-            data={lineChartData}
-            lines={[
-              { key: 'revenue', name: 'Revenue', color: '#3b82f6' },
-              { key: 'patients', name: 'Patients', color: '#10b981' },
-              { key: 'appointments', name: 'Appointments', color: '#f59e0b' },
-            ]}
-          />
-        </Box>
+        {/* Recent Patients Section */}
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gradient-to-r from-cyan-50/50 to-teal-50/50">
+            <div>
+              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
+                <Users className="w-5 h-5 text-cyan-600" />
+                Recent Patients
+              </CardTitle>
+              <CardDescription>Recently registered and active patients</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+              onClick={() => router.push('/dashboard/customers')}
+            >
+              View All Patients <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-slate-50 to-cyan-50/30">
+                  <tr>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Patient</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Visit</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Appointments</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {recentPatients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-cyan-50/30 transition-colors cursor-pointer">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                            {patient.avatar}
+                          </div>
+                          <span className="font-medium text-gray-900">{patient.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{patient.phone}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{patient.lastVisit}</td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {patient.appointments}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge 
+                          className={`font-normal ${
+                            patient.status === 'Active' 
+                              ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-0' 
+                              : patient.status === 'Pending'
+                                ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white border-0'
+                                : 'bg-gray-100 text-gray-600 border-0'
+                          }`}
+                        >
+                          {patient.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Activity Feed Section */}
-        <Box>
-          <MuiActivityFeed notifications={activityData} />
-        </Box>
-      </Box>
-    </Box>
+        {/* Navigation Cards - Telecom Glass Style */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {[
+            { title: 'Patients', icon: Users, count: 567, href: '/dashboard/customers', gradient: 'from-teal-500 to-cyan-500', shadow: 'hover:shadow-teal-500/20' },
+            { title: 'Hospitals', icon: Building2, count: 12, href: '/dashboard/hospitals', gradient: 'from-cyan-500 to-blue-500', shadow: 'hover:shadow-cyan-500/20' },
+            { title: 'Doctors', icon: Stethoscope, count: 48, href: '/dashboard/doctors', gradient: 'from-blue-500 to-indigo-500', shadow: 'hover:shadow-blue-500/20' },
+            { title: 'Payments', icon: CreditCard, count: 234, href: '/dashboard/payments', gradient: 'from-indigo-500 to-violet-500', shadow: 'hover:shadow-indigo-500/20' },
+            { title: 'Reports', icon: TrendingUp, count: 15, href: '/dashboard/reports', gradient: 'from-violet-500 to-purple-500', shadow: 'hover:shadow-violet-500/20' },
+          ].map((item, index) => (
+            <Card 
+              key={index} 
+              className={`border-0 shadow-sm hover:shadow-lg ${item.shadow} transition-all duration-300 cursor-pointer group overflow-hidden`}
+              onClick={() => router.push(item.href)}
+            >
+              <CardContent className="p-5 relative">
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${item.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <item.icon className="w-6 h-6 text-white" />
+                </div>
+                <p className="font-semibold text-gray-900">{item.title}</p>
+                <p className="text-sm text-gray-500">{item.count} total</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+      </div>
+    </div>
   );
 };

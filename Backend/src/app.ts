@@ -17,6 +17,7 @@ import notificationRoutes from './routes/notifications.routes';
 import doctorRoutes from './routes/doctors.routes';
 import hospitalRoutes from './routes/hospitals.routes';
 import agentRoutes from './routes/agents.routes';
+import adminPaymentRoutes from './routes/admin-payments.routes';
 
 const app = express();
 
@@ -89,6 +90,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/admin/payments', adminPaymentRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -105,6 +107,7 @@ app.get('/api', (req, res) => {
       notifications: '/api/notifications',
       doctors: '/api/doctors',
       hospitals: '/api/hospitals',
+      adminPayments: '/api/admin/payments',
     },
     documentation: 'https://docs.echannelling.com',
   });

@@ -912,3 +912,301 @@ model NotificationLog {
   
   @@map("notification_logs")
 }
+
+// ============================================
+// ADMIN PAYMENT MODULE - ADDITIVE MODELS ONLY
+// ============================================
+
+// Admin Payment Audit Log - tracks all admin payment actions
+model AdminPaymentAuditLog {
+  id                String              @id @default(uuid())
+  actionType        AdminPaymentAction
+  paymentId         String?             @map("paymentId")
+  refundRequestId   String?             @map("refundRequestId")
+  reversalRequestId String?             @map("reversalRequestId")
+  topUpId           String?             @map("topUpId")
+  performedById     String              @map("performedById")
+  performedByEmail  String              @map("performedByEmail")
+  performedByRole   String              @map("performedByRole")
+  previousState     Json?               @map("previousState")
+  newState          Json?               @map("newState")
+  amount            Decimal?            @db.Decimal(10, 2)
+  currency          String              @default("LKR")
+  reason            String?
+  metadata          Json?
+  ipAddress         String?             @map("ipAddress")
+  userAgent         String?             @map("userAgent")
+  idempotencyKey    String?             @unique @map("idempotencyKey")
+  createdAt         DateTime            @default(now()) @map("createdAt")
+  
+  @@index([paymentId])
+  @@index([performedById])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("admin_payment_audit_logs")
+}
+
+// Refund Request - workflow for refund processing
+model AdminRefundRequest {
+  id                    String              @id @default(uuid())
+  requestNumber         String              @unique @map("requestNumber")
+  paymentId             String              @map("paymentId")
+  originalTransactionId String              @map("originalTransactionId")
+  appointmentId         String?             @map("appointmentId")
+  memberId              String?             @map("memberId")
+  memberType            String?             @map("memberType")
+  originalAmount        Decimal             @db.Decimal(10, 2) @map("originalAmount")
+  refundAmount          Decimal             @db.Decimal(10, 2) @map("refundAmount")
+  currency              String              @default("LKR")
+  refundType            RefundType          @default(FULL) @map("refundType")
+  refundMethod          RefundMethod        @default(ORIGINAL_METHOD) @map("refundMethod")
+  status                RefundStatus        @default(REQUESTED)
+  reason                String
+  internalNotes         String?             @map("internalNotes")
+  requestedById         String              @map("requestedById")
+  requestedByEmail      String              @map("requestedByEmail")
+  approvedById          String?             @map("approvedById")
+  approvedByEmail       String?             @map("approvedByEmail")
+  approvedAt            DateTime?           @map("approvedAt")
+  processedById         String?             @map("processedById")
+  processedByEmail      String?             @map("processedByEmail")
+  processedAt           DateTime?           @map("processedAt")
+  completedAt           DateTime?           @map("completedAt")
+  rejectedById          String?             @map("rejectedById")
+  rejectedByEmail       String?             @map("rejectedByEmail")
+  rejectedAt            DateTime?           @map("rejectedAt")
+  rejectionReason       String?             @map("rejectionReason")
+  gatewayRefundId       String?             @map("gatewayRefundId")
+  gatewayResponse       Json?               @map("gatewayResponse")
+  idempotencyKey        String?             @unique @map("idempotencyKey")
+  metadata              Json?
+  createdAt             DateTime            @default(now()) @map("createdAt")
+  updatedAt             DateTime            @updatedAt @map("updatedAt")
+  
+  @@index([paymentId])
+  @@index([status])
+  @@index([requestedById])
+  @@index([memberId])
+  @@index([createdAt])
+  @@map("admin_refund_requests")
+}
+
+// Reversal Request - for cancellations and incomplete payments
+model AdminReversalRequest {
+  id                    String              @id @default(uuid())
+  requestNumber         String              @unique @map("requestNumber")
+  paymentId             String              @map("paymentId")
+  originalTransactionId String              @map("originalTransactionId")
+  appointmentId         String?             @map("appointmentId")
+  memberId              String?             @map("memberId")
+  memberType            String?             @map("memberType")
+  originalAmount        Decimal             @db.Decimal(10, 2) @map("originalAmount")
+  reversalType          ReversalType        @map("reversalType")
+  status                ReversalStatus      @default(PENDING)
+  reason                String
+  internalNotes         String?             @map("internalNotes")
+  autoDetected          Boolean             @default(false) @map("autoDetected")
+  detectionSource       String?             @map("detectionSource")
+  requestedById         String              @map("requestedById")
+  requestedByEmail      String              @map("requestedByEmail")
+  processedById         String?             @map("processedById")
+  processedByEmail      String?             @map("processedByEmail")
+  processedAt           DateTime?           @map("processedAt")
+  completedAt           DateTime?           @map("completedAt")
+  gatewayReversalId     String?             @map("gatewayReversalId")
+  gatewayResponse       Json?               @map("gatewayResponse")
+  idempotencyKey        String?             @unique @map("idempotencyKey")
+  metadata              Json?
+  createdAt             DateTime            @default(now()) @map("createdAt")
+  updatedAt             DateTime            @updatedAt @map("updatedAt")
+  
+  @@index([paymentId])
+  @@index([status])
+  @@index([requestedById])
+  @@index([memberId])
+  @@index([autoDetected])
+  @@index([createdAt])
+  @@map("admin_reversal_requests")
+}
+
+// Member Top-Up - for prepaid/credit top-ups
+model AdminMemberTopUp {
+  id                String              @id @default(uuid())
+  topUpNumber       String              @unique @map("topUpNumber")
+  memberId          String              @map("memberId")
+  memberType        MemberType          @map("memberType")
+  memberEmail       String?             @map("memberEmail")
+  memberName        String?             @map("memberName")
+  amount            Decimal             @db.Decimal(10, 2)
+  currency          String              @default("LKR")
+  previousBalance   Decimal             @db.Decimal(10, 2) @map("previousBalance")
+  newBalance        Decimal             @db.Decimal(10, 2) @map("newBalance")
+  topUpMethod       TopUpMethod         @map("topUpMethod")
+  paymentReference  String?             @map("paymentReference")
+  status            TopUpStatus         @default(PENDING)
+  reason            String?
+  internalNotes     String?             @map("internalNotes")
+  processedById     String              @map("processedById")
+  processedByEmail  String              @map("processedByEmail")
+  approvedById      String?             @map("approvedById")
+  approvedByEmail   String?             @map("approvedByEmail")
+  approvedAt        DateTime?           @map("approvedAt")
+  completedAt       DateTime?           @map("completedAt")
+  idempotencyKey    String              @unique @map("idempotencyKey")
+  metadata          Json?
+  createdAt         DateTime            @default(now()) @map("createdAt")
+  updatedAt         DateTime            @updatedAt @map("updatedAt")
+  
+  @@index([memberId])
+  @@index([memberType])
+  @@index([status])
+  @@index([processedById])
+  @@index([createdAt])
+  @@map("admin_member_topups")
+}
+
+// Member Payment Options - payment method preferences per member
+model AdminMemberPaymentOption {
+  id                String              @id @default(uuid())
+  memberId          String              @map("memberId")
+  memberType        MemberType          @map("memberType")
+  paymentMethod     PaymentMethod       @map("paymentMethod")
+  isEnabled         Boolean             @default(true) @map("isEnabled")
+  isDefault         Boolean             @default(false) @map("isDefault")
+  maxTransactionLimit Decimal?          @db.Decimal(10, 2) @map("maxTransactionLimit")
+  dailyLimit        Decimal?            @db.Decimal(10, 2) @map("dailyLimit")
+  monthlyLimit      Decimal?            @db.Decimal(10, 2) @map("monthlyLimit")
+  restrictions      Json?
+  configuredById    String              @map("configuredById")
+  configuredByEmail String              @map("configuredByEmail")
+  createdAt         DateTime            @default(now()) @map("createdAt")
+  updatedAt         DateTime            @updatedAt @map("updatedAt")
+  
+  @@unique([memberId, memberType, paymentMethod])
+  @@index([memberId])
+  @@index([memberType])
+  @@map("admin_member_payment_options")
+}
+
+// Payment Reconciliation Record - tracks reconciliation activities
+model AdminPaymentReconciliation {
+  id                    String                @id @default(uuid())
+  reconciliationNumber  String                @unique @map("reconciliationNumber")
+  reconciliationDate    DateTime              @map("reconciliationDate")
+  startDate             DateTime              @map("startDate")
+  endDate               DateTime              @map("endDate")
+  totalTransactions     Int                   @map("totalTransactions")
+  matchedTransactions   Int                   @map("matchedTransactions")
+  mismatchedTransactions Int                  @map("mismatchedTransactions")
+  incompleteTransactions Int                  @map("incompleteTransactions")
+  totalAmount           Decimal               @db.Decimal(12, 2) @map("totalAmount")
+  matchedAmount         Decimal               @db.Decimal(12, 2) @map("matchedAmount")
+  mismatchedAmount      Decimal               @db.Decimal(12, 2) @map("mismatchedAmount")
+  status                ReconciliationStatus  @default(IN_PROGRESS)
+  summary               Json?
+  discrepancies         Json?
+  performedById         String                @map("performedById")
+  performedByEmail      String                @map("performedByEmail")
+  completedAt           DateTime?             @map("completedAt")
+  createdAt             DateTime              @default(now()) @map("createdAt")
+  updatedAt             DateTime              @updatedAt @map("updatedAt")
+  
+  @@index([reconciliationDate])
+  @@index([status])
+  @@index([performedById])
+  @@map("admin_payment_reconciliations")
+}
+
+// Admin Payment Enums
+enum AdminPaymentAction {
+  VIEW_TRANSACTION
+  SEARCH_TRANSACTIONS
+  EXPORT_TRANSACTIONS
+  INITIATE_REFUND
+  APPROVE_REFUND
+  REJECT_REFUND
+  PROCESS_REFUND
+  COMPLETE_REFUND
+  INITIATE_REVERSAL
+  PROCESS_REVERSAL
+  COMPLETE_REVERSAL
+  TOP_UP_MEMBER
+  APPROVE_TOP_UP
+  UPDATE_PAYMENT_OPTIONS
+  RUN_RECONCILIATION
+  GENERATE_REPORT
+  VIEW_RECONCILIATION
+}
+
+enum RefundType {
+  FULL
+  PARTIAL
+}
+
+enum RefundMethod {
+  ORIGINAL_METHOD
+  BANK_TRANSFER
+  CREDIT_NOTE
+  WALLET_CREDIT
+}
+
+enum RefundStatus {
+  REQUESTED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PROCESSING
+  PROCESSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ReversalType {
+  CANCELLATION
+  INCOMPLETE_PAYMENT
+  DUPLICATE_PAYMENT
+  FRAUD_SUSPECTED
+  TECHNICAL_ERROR
+  TIMEOUT
+  SYSTEM_ERROR
+}
+
+enum ReversalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum MemberType {
+  PATIENT
+  CORPORATE
+  AGENT
+  HOSPITAL
+}
+
+enum TopUpMethod {
+  BANK_TRANSFER
+  CASH
+  CARD
+  ADMIN_ADJUSTMENT
+  PROMOTION
+}
+
+enum TopUpStatus {
+  PENDING
+  PENDING_APPROVAL
+  APPROVED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  COMPLETED_WITH_DISCREPANCIES
+  FAILED
+}

@@ -3,75 +3,80 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* SLT Mobitel Brand Colors */
+/* Primary Green: #00A651 */
+/* Primary Blue: #0072BC */
+/* Supporting colors derived from brand */
+
 :root {
   --background: #ffffff;
-  --foreground: #164e63;
-  --card: #ecfeff;
-  --card-foreground: #475569;
+  --foreground: #1e293b;
+  --card: #f0fdf4;
+  --card-foreground: #1e293b;
   --popover: #ffffff;
-  --popover-foreground: #475569;
-  --primary: #164e63;
+  --popover-foreground: #1e293b;
+  --primary: #00A651;
   --primary-foreground: #ffffff;
-  --secondary: #f59e0b;
+  --secondary: #0072BC;
   --secondary-foreground: #ffffff;
-  --muted: #ecfeff;
-  --muted-foreground: #475569;
-  --accent: #f59e0b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #0072BC;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #475569;
+  --border: #e2e8f0;
   --input: #ffffff;
-  --ring: rgba(22, 78, 99, 0.5);
-  --chart-1: #dc2626;
-  --chart-2: #f59e0b;
-  --chart-3: #a16207;
-  --chart-4: #164e63;
-  --chart-5: #475569;
-  --radius: 0.5rem;
+  --ring: rgba(0, 166, 81, 0.4);
+  --chart-1: #00A651;
+  --chart-2: #0072BC;
+  --chart-3: #10b981;
+  --chart-4: #3b82f6;
+  --chart-5: #64748b;
+  --radius: 0.625rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #475569;
-  --sidebar-primary: #ecfeff;
-  --sidebar-primary-foreground: #164e63;
-  --sidebar-accent: #f59e0b;
+  --sidebar-foreground: #1e293b;
+  --sidebar-primary: #f0fdf4;
+  --sidebar-primary-foreground: #00A651;
+  --sidebar-accent: #0072BC;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #475569;
-  --sidebar-ring: rgba(22, 78, 99, 0.5);
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: rgba(0, 166, 81, 0.4);
 }
 
 .dark {
   --background: #0f172a;
-  --foreground: #ecfeff;
+  --foreground: #f8fafc;
   --card: #1e293b;
-  --card-foreground: #ecfeff;
+  --card-foreground: #f8fafc;
   --popover: #1e293b;
-  --popover-foreground: #ecfeff;
-  --primary: #06b6d4;
+  --popover-foreground: #f8fafc;
+  --primary: #22c55e;
   --primary-foreground: #0f172a;
-  --secondary: #f59e0b;
+  --secondary: #3b82f6;
   --secondary-foreground: #0f172a;
   --muted: #334155;
   --muted-foreground: #94a3b8;
-  --accent: #f59e0b;
+  --accent: #3b82f6;
   --accent-foreground: #0f172a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #334155;
   --input: #1e293b;
-  --ring: rgba(6, 182, 212, 0.5);
-  --chart-1: #dc2626;
-  --chart-2: #f59e0b;
-  --chart-3: #a16207;
-  --chart-4: #06b6d4;
-  --chart-5: #475569;
+  --ring: rgba(34, 197, 94, 0.4);
+  --chart-1: #22c55e;
+  --chart-2: #3b82f6;
+  --chart-3: #10b981;
+  --chart-4: #60a5fa;
+  --chart-5: #64748b;
   --sidebar: #1e293b;
-  --sidebar-foreground: #ecfeff;
+  --sidebar-foreground: #f8fafc;
   --sidebar-primary: #334155;
-  --sidebar-primary-foreground: #ecfeff;
-  --sidebar-accent: #f59e0b;
+  --sidebar-primary-foreground: #22c55e;
+  --sidebar-accent: #3b82f6;
   --sidebar-accent-foreground: #0f172a;
   --sidebar-border: #334155;
-  --sidebar-ring: rgba(6, 182, 212, 0.5);
+  --sidebar-ring: rgba(34, 197, 94, 0.4);
 }
 
 @theme inline {
@@ -119,6 +124,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

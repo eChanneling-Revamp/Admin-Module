@@ -4,6 +4,7 @@ import { AppointmentStatus, PaymentStatus, Gender } from '@prisma/client';
 import { ResponseHelper } from '../utils/response';
 import { asyncHandler } from '../middlewares/error.middleware';
 import { logger } from '../config/logger';
+import { prisma } from '../config/database';
 
 // Validation schemas
 const createAppointmentSchema = z.object({
@@ -111,17 +112,58 @@ export class AppointmentController {
   });
 
   getAppointments = asyncHandler(async (req: Request, res: Response) => {
-    const query = req.query;
+    const { page = '1', limit = '10', status, search } = req.query;
 
     try {
-      // TODO: Implement appointment listing logic
-      // const result = await this.appointmentService.findMany(query);
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const skip = (pageNum - 1) * limitNum;
+
+      // Build where clause
+      const where: any = {};
+      if (status) {
+        where.status = status as AppointmentStatus;
+      }
+      if (search) {
+        where.OR = [
+          { patientName: { contains: search as string, mode: 'insensitive' } },
+          { patientEmail: { contains: search as string, mode: 'insensitive' } },
+          { appointmentNumber: { contains: search as string, mode: 'insensitive' } },
+        ];
+      }
+
+      // Fetch appointments from database
+      const [appointments, total] = await Promise.all([
+        prisma.appointment.findMany({
+          where,
+          skip,
+          take: limitNum,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            session: {
+              include: {
+                doctor: true,
+                hospital: true,
+              }
+            },
+            bookedBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            },
+            payments: true,
+          }
+        }),
+        prisma.appointment.count({ where }),
+      ]);
       
-      ResponseHelper.paginated(res, [], {
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 0,
+      ResponseHelper.paginated(res, appointments, {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
       }, 'Appointments retrieved successfully');
     } catch (error) {
       logger.error('Get appointments error:', error);

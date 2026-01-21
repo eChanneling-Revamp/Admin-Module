@@ -69,6 +69,10 @@ export class BranchRepository {
     const orderBy: Prisma.BranchOrderByWithRelationInput = {};
     orderBy[sortBy] = sortOrder;
 
+    console.log('findMany query parameters:', query);
+    console.log('findMany where clause:', where);
+    console.log('findMany orderBy clause:', orderBy);
+
     const [branches, total] = await Promise.all([
       prisma.branch.findMany({
         where,

@@ -3,6 +3,7 @@ import { BranchRepository } from '../repositories/BranchRepository';
 import { AuditService } from './AuditService';
 import { sendMessage, TOPICS } from '../config/kafka';
 import { logger } from '../config/logger';
+import prisma from '../config/database';
 import {
   CreateBranchRequest,
   UpdateBranchRequest,
@@ -39,6 +40,7 @@ export class BranchService {
       phone: branchData.phone,
       email: branchData.email,
       description: branchData.description,
+      
     });
 
     // Log audit
@@ -115,7 +117,9 @@ export class BranchService {
   }
 
   async getBranches(query: BranchListQuery) {
-    const result = await this.branchRepository.findMany(query);
+    logger.info('getBranches: Query parameters:', query);
+    const result = await this.branchRepository.findMany({}); // Fetch all branches without filters for debugging
+    logger.info('getBranches: Fetching all branches without filters for debugging');
     
     return {
       branches: result.branches.map(branch => ({
@@ -363,6 +367,42 @@ export class BranchService {
       createdAt: updatedBranch.createdAt,
       updatedAt: updatedBranch.updatedAt,
     };
+  }
+
+  async getAllBranches(): Promise<any[]> {
+    try {
+      logger.info('Starting to fetch all branches from database');
+
+      // Fetch all branches for admin panel (including inactive ones)
+      const branches = await prisma.branch.findMany({
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          city: true,
+          district: true,
+          province: true,
+          type: true,
+          status: true,
+          address: true,
+          phone: true,
+          email: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      logger.info(`Found ${branches.length} branches in database`);
+
+      return branches;
+    } catch (error) {
+      logger.error('Error fetching branches from database:', error);
+      throw error;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -15,6 +16,7 @@ import Link from "next/link"
 
 export default function BranchesPage() {
   const { toast } = useToast()
+  const { token } = useAuth()
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -24,7 +26,7 @@ export default function BranchesPage() {
   const loadBranches = async () => {
     try {
       setLoading(true)
-      const data = await branchService.getAllBranches()
+      const data = await branchService.getAllBranches(token ?? undefined)
       setBranches(data)
     } catch (error) {
       toast({
@@ -39,7 +41,7 @@ export default function BranchesPage() {
 
   useEffect(() => {
     loadBranches()
-  }, [])
+  }, [token])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -48,7 +50,7 @@ export default function BranchesPage() {
     }
 
     try {
-      const data = await branchService.searchBranches(searchQuery)
+      const data = await branchService.searchBranches(searchQuery, token ?? undefined)
       setBranches(data)
     } catch (error) {
       toast({
@@ -63,7 +65,7 @@ export default function BranchesPage() {
     if (!confirm("Are you sure you want to delete this branch?")) return
 
     try {
-      await branchService.deleteBranch(id)
+      await branchService.deleteBranch(id, token ?? undefined)
       toast({ title: "Success", description: "Branch deleted successfully" })
       loadBranches()
     } catch (error) {
@@ -157,7 +159,6 @@ export default function BranchesPage() {
                     <TableHead>Branch Code</TableHead>
                     <TableHead>Branch Name</TableHead>
                     <TableHead>Reference Type</TableHead>
-                    <TableHead>Reference Name</TableHead>
                     <TableHead>City</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Status</TableHead>
@@ -174,7 +175,6 @@ export default function BranchesPage() {
                           {branch.referenceType}
                         </Badge>
                       </TableCell>
-                      <TableCell>{branch.referenceName}</TableCell>
                       <TableCell>{branch.city}</TableCell>
                       <TableCell className="text-sm">{branch.contactNumber}</TableCell>
                       <TableCell>

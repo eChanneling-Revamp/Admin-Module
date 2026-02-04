@@ -7,12 +7,15 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!apiUrl) {
+      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
+    }
+    
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production' 
-          ? 'https://your-app-name.vercel.app/api/:path*'
-          : 'http://localhost:5000/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
       },
     ]
   },

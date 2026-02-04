@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -81,16 +82,16 @@ export default function UsersPage() {
 
   if (loading && users.length === 0) {
     return (
-      <div className="p-6">
+      <ProtectedLayout>
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-cyan-600" />
         </div>
-      </div>
+      </ProtectedLayout>
     )
   }
 
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -239,6 +240,6 @@ export default function UsersPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </ProtectedLayout>
   )
 }

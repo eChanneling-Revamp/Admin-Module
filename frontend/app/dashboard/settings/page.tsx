@@ -1,5 +1,6 @@
 "use client"
 
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Settings, Save } from "lucide-react"
@@ -10,7 +11,7 @@ import { Switch } from "@/components/ui/switch"
 
 export default function SettingsPage() {
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -220,6 +221,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </ProtectedLayout>
   )
 }

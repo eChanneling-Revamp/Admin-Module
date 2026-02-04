@@ -1,5 +1,6 @@
 "use client"
 
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +19,7 @@ const schedules = [
 
 export default function DoctorSchedulesPage() {
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -116,6 +117,6 @@ export default function DoctorSchedulesPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </ProtectedLayout>
   )
 }

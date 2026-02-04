@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -86,7 +87,7 @@ export default function BranchesPage() {
   }
 
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -215,6 +216,6 @@ export default function BranchesPage() {
         branch={selectedBranch}
         onSuccess={loadBranches}
       />
-    </div>
+    </ProtectedLayout>
   )
 }

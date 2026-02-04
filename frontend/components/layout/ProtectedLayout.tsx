@@ -23,11 +23,11 @@ export function ProtectedLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="ml-72">
+      <div className="ml-64">
         <TopBar />
-        <main className="pt-16 min-h-[calc(100vh-64px)]">{children}</main>
+        <main className="pt-16 p-6">{children}</main>
       </div>
     </div>
   )

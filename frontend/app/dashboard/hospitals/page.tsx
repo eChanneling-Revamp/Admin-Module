@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Plus, Search, Edit, Trash2, MapPin, Phone, Mail, Building, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -158,16 +159,16 @@ export default function HospitalsPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <ProtectedLayout>
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-cyan-600" />
         </div>
-      </div>
+      </ProtectedLayout>
     )
   }
 
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -297,7 +298,7 @@ export default function HospitalsPage() {
         </DialogContent>
       </Dialog>
       </div>
-    </div>
+    </ProtectedLayout>
   )
 }
 

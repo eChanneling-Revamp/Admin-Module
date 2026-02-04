@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -41,9 +42,9 @@ export default function BranchDetailPage({ params }: { params: { id: string } })
 
   if (loading) {
     return (
-      <div className="p-6">
+      <ProtectedLayout>
         <div className="text-center py-8">Loading branch details...</div>
-      </div>
+      </ProtectedLayout>
     )
   }
 
@@ -52,7 +53,7 @@ export default function BranchDetailPage({ params }: { params: { id: string } })
   }
 
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -178,6 +179,6 @@ export default function BranchDetailPage({ params }: { params: { id: string } })
       </div>
 
       <BranchModal open={modalOpen} onClose={() => setModalOpen(false)} branch={branch} onSuccess={loadBranch} />
-    </div>
+    </ProtectedLayout>
   )
 }

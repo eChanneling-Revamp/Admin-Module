@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -119,11 +120,11 @@ export default function InvoiceDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <ProtectedLayout>
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
         </div>
-      </div>
+      </ProtectedLayout>
     )
   }
 
@@ -136,7 +137,7 @@ export default function InvoiceDetailPage() {
   const total = subtotal + tax
 
   return (
-    <div className="p-6">
+    <ProtectedLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -338,6 +339,6 @@ export default function InvoiceDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </ProtectedLayout>
   )
 }

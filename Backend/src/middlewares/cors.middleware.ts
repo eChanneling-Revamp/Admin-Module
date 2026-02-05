@@ -2,14 +2,21 @@ import { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { env } from '../config/env';
 
+const normalize = (o: string) => o.replace(/\/$/, '').trim();
+const envOrigins = env.CORS_ORIGIN.split(',').map(o => normalize(o));
+const allowAllOrigins = envOrigins.includes('*');
+
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin) {
       return callback(null, true);
     }
 
-    const normalize = (o: string) => o.replace(/\/$/, '').trim();
-    const allowedFromEnv = env.CORS_ORIGIN.split(',').map(o => normalize(o));
+    if (allowAllOrigins) {
+      return callback(null, true);
+    }
+
+    const allowedFromEnv = envOrigins;
     const extraOrigins = [
       'https://admin-module-jbat.vercel.app',
     ];
@@ -44,7 +51,9 @@ export const corsMiddleware = cors(corsOptions);
 
 export const corsPreflight = (req: Request, res: Response, next: NextFunction): void => {
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    // With credentials enabled, wildcard '*' is not allowed; reflect origin
+    const originToUse = allowAllOrigins ? (req.headers.origin || '*') : (req.headers.origin || '*');
+    res.header('Access-Control-Allow-Origin', originToUse);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
     res.header('Access-Control-Allow-Credentials', 'true');

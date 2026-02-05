@@ -22,6 +22,15 @@ const consoleFormat = winston.format.combine(
   })
 );
 
+// Detect serverless platforms where filesystem is read-only (except /tmp)
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_REGION ||
+  process.env.AWS_EXECUTION_ENV ||
+  process.env.K_SERVICE ||
+  process.env.NETLIFY
+);
+
 // Create logger instance
 const transports: winston.transport[] = [
   // Console transport
@@ -30,8 +39,8 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports only in development environment
-if (env.NODE_ENV === 'development') {
+// Add file transports only in development AND not on serverless platforms
+if (env.NODE_ENV === 'development' && !isServerless) {
   transports.push(
     // File transport for errors
     new winston.transports.File({
@@ -57,9 +66,9 @@ export const logger = winston.createLogger({
   transports,
 });
 
-// Create logs directory if it doesn't exist (only in development)
+// Create logs directory if it doesn't exist (only in development and non-serverless)
 import fs from 'fs';
-if (env.NODE_ENV === 'development') {
+if (env.NODE_ENV === 'development' && !isServerless) {
   const logsDir = path.join(process.cwd(), 'logs');
   if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });

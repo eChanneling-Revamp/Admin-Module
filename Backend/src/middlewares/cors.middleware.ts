@@ -4,14 +4,19 @@ import { env } from '../config/env';
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) {
       return callback(null, true);
     }
 
-    const allowedOrigins = env.CORS_ORIGIN.split(',').map(origin => origin.trim());
-    
-    if (allowedOrigins.includes(origin)) {
+    const normalize = (o: string) => o.replace(/\/$/, '').trim();
+    const allowedFromEnv = env.CORS_ORIGIN.split(',').map(o => normalize(o));
+    const extraOrigins = [
+      'https://admin-module-jbat.vercel.app',
+    ];
+    const allowedOrigins = [...allowedFromEnv, ...extraOrigins].map(o => normalize(o));
+    const requestOrigin = normalize(origin);
+
+    if (allowedOrigins.includes(requestOrigin)) {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);

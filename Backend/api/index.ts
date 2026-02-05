@@ -1,18 +1,19 @@
 // Register module-alias for path resolution
 require('module-alias/register');
 
-import { Request, Response } from 'express';
-import app from '../src/app';
+import type { Request, Response } from 'express';
 
 export default async function handler(req: Request, res: Response) {
   try {
-    // Forward the request to the Express app
+    // Lazy-load the Express app to avoid crashing on module init in serverless
+    const { default: app } = await import('../src/app');
     app(req, res);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Serverless function error:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error',
-      message: 'Something went wrong'
-    });
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? 'Internal Server Error'
+        : error?.message || 'Internal Server Error';
+    res.status(500).json({ success: false, error: message });
   }
 }

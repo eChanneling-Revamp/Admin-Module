@@ -60,4 +60,5 @@ const startServer = async () => {
 
 
 //update for serverless export
+//added cors origin for vercel admin module
 startServer();

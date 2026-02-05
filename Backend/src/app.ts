@@ -117,5 +117,6 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 //update for serverless export
+//added cors origin for vercel admin module
 
 export default app;

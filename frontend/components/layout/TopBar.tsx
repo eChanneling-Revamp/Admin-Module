@@ -27,12 +27,11 @@ export function TopBar() {
     router.push("/login")
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "A";
+    const first = firstName ? firstName[0] : "";
+    const last = lastName ? lastName[0] : "";
+    return (first + last).toUpperCase();
   }
 
   return (
@@ -82,13 +81,13 @@ export function TopBar() {
               className="flex items-center gap-3 hover:bg-white/20 text-white transition-all duration-300 rounded-full px-3 py-2 hover:shadow-lg"
             >
               <Avatar className="h-10 w-10 ring-2 ring-white/60 hover:ring-white hover:ring-4 transition-all duration-300 cursor-pointer shadow-lg">
-                <AvatarImage src="/admin.webp" alt={user?.name || "Admin"} className="object-cover" />
+                <AvatarImage src="/admin.webp" alt={user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || "Admin" : "Admin"} className="object-cover" />
                 <AvatarFallback className="bg-white text-cyan-700 font-bold text-base">
-                  {user ? getInitials(user.name) : "A"}
+                  {user ? getInitials(user.firstName, user.lastName) : "A"}
                 </AvatarFallback>
               </Avatar>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-semibold text-white drop-shadow-md">{user?.name || "Admin User"}</p>
+                <p className="text-sm font-semibold text-white drop-shadow-md">{user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || "Admin User" : "Admin User"}</p>
                 <p className="text-xs text-cyan-50 capitalize font-medium">{user?.role || "Administrator"}</p>
               </div>
             </Button>
@@ -100,13 +99,13 @@ export function TopBar() {
             <DropdownMenuLabel className="font-normal p-0 mb-2">
               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 via-cyan-50 to-teal-50 rounded-lg border border-cyan-100">
                 <Avatar className="h-14 w-14 ring-2 ring-cyan-400 shadow-md">
-                  <AvatarImage src="/admin.webp" alt={user?.name || "Admin"} className="object-cover" />
+                  <AvatarImage src="/admin.webp" alt={user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || "Admin" : "Admin"} className="object-cover" />
                   <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-teal-600 text-white font-bold text-lg">
-                    {user ? getInitials(user.name) : "A"}
+                    {user ? getInitials(user.firstName, user.lastName) : "A"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col flex-1">
-                  <p className="text-base font-bold text-gray-900">{user?.name || "Admin User"}</p>
+                  <p className="text-base font-bold text-gray-900">{user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || "Admin User" : "Admin User"}</p>
                   <p className="text-xs text-gray-600 mt-0.5">{user?.email || "admin@echannelling.lk"}</p>
                   <Badge className="bg-gradient-to-r from-cyan-600 to-teal-600 text-white text-xs mt-1.5 w-fit px-2 py-0.5 capitalize">
                     {user?.role || "Administrator"}

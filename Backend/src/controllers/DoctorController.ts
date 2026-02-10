@@ -85,10 +85,20 @@ export class DoctorController {
       ResponseHelper.created(res, doctor, 'Doctor created successfully');
     } catch (error) {
       logger.error('Create doctor error:', error);
-      if (error instanceof Error && error.message.includes('Unique constraint')) {
-        ResponseHelper.badRequest(res, 'Email already exists');
+
+      const errorCode = typeof error === 'object' && error !== null ? (error as any).code : undefined;
+      const errorMeta = typeof error === 'object' && error !== null ? (error as any).meta : undefined;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorDetails = JSON.stringify({
+        message: errorMessage,
+        code: errorCode,
+        meta: errorMeta,
+      });
+
+      if (errorCode === 'P2002' || errorMessage.includes('Unique constraint')) {
+        ResponseHelper.badRequest(res, 'Email already exists', errorDetails);
       } else {
-        ResponseHelper.badRequest(res, 'Failed to create doctor');
+        ResponseHelper.badRequest(res, 'Failed to create doctor', errorDetails);
       }
     }
   });

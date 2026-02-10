@@ -7,13 +7,48 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Search, UserPlus, Edit, Trash2 } from "lucide-react"
-import { doctorApi, type Doctor } from "@/lib/api/doctorApi"
+import { doctorApi, type Doctor, type CreateDoctorData, type UpdateDoctorData } from "@/lib/api/doctorApi"
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
+  const [formData, setFormData] = useState<CreateDoctorData>({
+    name: "",
+    email: "",
+    specialization: "",
+    qualification: "",
+    experience: undefined,
+    phoneNumber: "",
+    consultationFee: undefined,
+    description: "",
+  })
+  const [editFormData, setEditFormData] = useState<UpdateDoctorData>({
+    name: "",
+    email: "",
+    specialization: "",
+    qualification: "",
+    experience: undefined,
+    phoneNumber: "",
+    consultationFee: undefined,
+    description: "",
+    isActive: true,
+  })
 
   useEffect(() => {
     fetchDoctors()
@@ -40,6 +75,96 @@ export default function DoctorsPage() {
     } catch (error) {
       console.error("Error deleting doctor:", error)
     }
+  }
+
+  const handleAddDoctor = async () => {
+    try {
+      await doctorApi.create({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        specialization: formData.specialization?.trim() || undefined,
+        qualification: formData.qualification?.trim() || undefined,
+        experience: formData.experience ? Number(formData.experience) : undefined,
+        phoneNumber: formData.phoneNumber?.trim() || undefined,
+        consultationFee: formData.consultationFee ? Number(formData.consultationFee) : undefined,
+        description: formData.description?.trim() || undefined,
+      })
+      await fetchDoctors()
+      setIsAddDialogOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error("Error creating doctor:", error)
+    }
+  }
+
+  const handleEditDoctor = async () => {
+    if (!selectedDoctor) {
+      return
+    }
+
+    try {
+      await doctorApi.update(selectedDoctor.id, {
+        name: editFormData.name?.trim() || undefined,
+        email: editFormData.email?.trim() || undefined,
+        specialization: editFormData.specialization?.trim() || undefined,
+        qualification: editFormData.qualification?.trim() || undefined,
+        experience: editFormData.experience ? Number(editFormData.experience) : undefined,
+        phoneNumber: editFormData.phoneNumber?.trim() || undefined,
+        consultationFee: editFormData.consultationFee ? Number(editFormData.consultationFee) : undefined,
+        description: editFormData.description?.trim() || undefined,
+        isActive: editFormData.isActive,
+      })
+      await fetchDoctors()
+      setIsEditDialogOpen(false)
+      resetEditForm()
+    } catch (error) {
+      console.error("Error updating doctor:", error)
+    }
+  }
+
+  const openEditDialog = (doctor: Doctor) => {
+    setSelectedDoctor(doctor)
+    setEditFormData({
+      name: doctor.name,
+      email: doctor.email,
+      specialization: doctor.specialization,
+      qualification: doctor.qualification,
+      experience: doctor.experience,
+      phoneNumber: doctor.phoneNumber,
+      consultationFee: doctor.consultationFee,
+      description: doctor.description,
+      isActive: doctor.isActive,
+      status: doctor.status,
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      specialization: "",
+      qualification: "",
+      experience: undefined,
+      phoneNumber: "",
+      consultationFee: undefined,
+      description: "",
+    })
+  }
+
+  const resetEditForm = () => {
+    setSelectedDoctor(null)
+    setEditFormData({
+      name: "",
+      email: "",
+      specialization: "",
+      qualification: "",
+      experience: undefined,
+      phoneNumber: "",
+      consultationFee: undefined,
+      description: "",
+      isActive: true,
+    })
   }
 
   const filteredDoctors = doctors.filter((doctor) => {
@@ -70,10 +195,35 @@ export default function DoctorsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Doctor Management</h1>
             <p className="text-gray-600 mt-1">Manage doctor profiles and schedules</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add New Doctor
-          </Button>
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open)
+              if (open) {
+                resetForm()
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add New Doctor
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Doctor</DialogTitle>
+                <DialogDescription>Enter doctor details to add to the system</DialogDescription>
+              </DialogHeader>
+              <DoctorForm formData={formData} setFormData={setFormData} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddDoctor} className="bg-blue-600">
+                  Add Doctor
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -143,7 +293,7 @@ export default function DoctorsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(doctor)}>Edit</Button>
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -160,6 +310,202 @@ export default function DoctorsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) {
+            resetEditForm()
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Doctor</DialogTitle>
+            <DialogDescription>Update doctor details</DialogDescription>
+          </DialogHeader>
+          <EditDoctorForm
+            formData={editFormData}
+            setFormData={setEditFormData}
+            selectedDoctor={selectedDoctor}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditDoctor} className="bg-blue-600">
+              Update Doctor
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedLayout>
+  )
+}
+
+function DoctorForm({
+  formData,
+  setFormData,
+}: {
+  formData: CreateDoctorData
+  setFormData: React.Dispatch<React.SetStateAction<CreateDoctorData>>
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Doctor Name *</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Dr. Jane Doe"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Email *</Label>
+        <Input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="doctor@echannelling.lk"
+        />
+      </div>
+      <div>
+        <Label>Specialization</Label>
+        <Input
+          value={formData.specialization || ""}
+          onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+          placeholder="Cardiology"
+        />
+      </div>
+      <div>
+        <Label>Qualification</Label>
+        <Input
+          value={formData.qualification || ""}
+          onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+          placeholder="MBBS, MD"
+        />
+      </div>
+      <div>
+        <Label>Experience (years)</Label>
+        <Input
+          type="number"
+          value={formData.experience ?? ""}
+          onChange={(e) => setFormData({ ...formData, experience: e.target.value === "" ? undefined : Number(e.target.value) })}
+          placeholder="8"
+          min={0}
+        />
+      </div>
+      <div>
+        <Label>Contact Number</Label>
+        <Input
+          value={formData.phoneNumber || ""}
+          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+          placeholder="+94112345678"
+        />
+      </div>
+      <div>
+        <Label>Consultation Fee</Label>
+        <Input
+          type="number"
+          value={formData.consultationFee ?? ""}
+          onChange={(e) => setFormData({ ...formData, consultationFee: e.target.value === "" ? undefined : Number(e.target.value) })}
+          placeholder="2500"
+          min={0}
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Description</Label>
+        <Input
+          value={formData.description || ""}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Short profile summary"
+        />
+      </div>
+    </div>
+  )
+}
+
+function EditDoctorForm({
+  formData,
+  setFormData,
+  selectedDoctor,
+}: {
+  formData: UpdateDoctorData
+  setFormData: React.Dispatch<React.SetStateAction<UpdateDoctorData>>
+  selectedDoctor: Doctor | null
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Email</Label>
+        <Input type="email" value={selectedDoctor?.email || ""} readOnly disabled />
+      </div>
+      <div className="col-span-2">
+        <Label>Doctor Name</Label>
+        <Input
+          value={formData.name || ""}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Dr. Jane Doe"
+        />
+      </div>
+      <div>
+        <Label>Specialization</Label>
+        <Input
+          value={formData.specialization || ""}
+          onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+          placeholder="Cardiology"
+        />
+      </div>
+      <div>
+        <Label>Qualification</Label>
+        <Input
+          value={formData.qualification || ""}
+          onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+          placeholder="MBBS, MD"
+        />
+      </div>
+      <div>
+        <Label>Experience (years)</Label>
+        <Input
+          type="number"
+          value={formData.experience ?? ""}
+          onChange={(e) => setFormData({ ...formData, experience: e.target.value === "" ? undefined : Number(e.target.value) })}
+          placeholder="8"
+          min={0}
+        />
+      </div>
+      <div>
+        <Label>Contact Number</Label>
+        <Input
+          value={formData.phoneNumber || ""}
+          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+          placeholder="+94112345678"
+        />
+      </div>
+      <div>
+        <Label>Consultation Fee</Label>
+        <Input
+          type="number"
+          value={formData.consultationFee ?? ""}
+          onChange={(e) => setFormData({ ...formData, consultationFee: e.target.value === "" ? undefined : Number(e.target.value) })}
+          placeholder="2500"
+          min={0}
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Description</Label>
+        <Input
+          value={formData.description || ""}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Short profile summary"
+        />
+      </div>
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={!!formData.isActive}
+          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+        />
+        <Label>Active Status</Label>
+      </div>
+    </div>
   )
 }

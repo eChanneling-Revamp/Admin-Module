@@ -9,14 +9,18 @@ import { Sidebar } from "./Sidebar"
 import { TopBar } from "./TopBar"
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isInitialized } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isInitialized && !isAuthenticated) {
       router.push("/login")
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, isInitialized, router])
+
+  if (!isInitialized) {
+    return null
+  }
 
   if (!isAuthenticated) {
     return null

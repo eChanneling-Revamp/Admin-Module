@@ -70,7 +70,7 @@ export function LoginForm() {
       const response = await loginService({ username, password, twoFA })
 
       if (response.success && response.token && response.user) {
-        login(response.token, response.user)
+        login(response.token, response.user, response.refreshToken)
         toast({
           title: "Login Successful",
           description: `Welcome back, ${response.user.name}!`,

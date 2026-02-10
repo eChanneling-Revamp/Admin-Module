@@ -7,19 +7,45 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Search, UserPlus, MoreVertical, Edit, Trash2 } from "lucide-react"
-import { userApi, type User, type UserQueryParams } from "@/lib/api/userApi"
+import { userApi, type User, type UserQueryParams, type CreateUserData } from "@/lib/api/userApi"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [formData, setFormData] = useState<CreateUserData>({
+    email: "",
+    password: "",
+    name: "",
+    role: "ADMIN",
+  })
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
     totalPages: 0
   })
+
+  const roleOptions = ["ADMIN", "DOCTOR", "HOSPITAL", "PATIENT"]
 
   useEffect(() => {
     fetchUsers()
@@ -75,6 +101,31 @@ export default function UsersPage() {
     }
   }
 
+  const handleAddUser = async () => {
+    try {
+      await userApi.create({
+        email: formData.email.trim(),
+        password: formData.password,
+        name: formData.name?.trim() || undefined,
+        role: formData.role,
+      })
+      await fetchUsers()
+      setIsAddDialogOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error("Error creating user:", error)
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      email: "",
+      password: "",
+      name: "",
+      role: "ADMIN",
+    })
+  }
+
   const stats = {
     total: pagination.total,
     active: users.filter(u => u.isActive).length,
@@ -98,10 +149,35 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-1">Manage all system users and their permissions</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add New User
-          </Button>
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open)
+              if (open) {
+                resetForm()
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add New User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+                <DialogDescription>Enter user details to add to the system</DialogDescription>
+              </DialogHeader>
+              <UserForm formData={formData} setFormData={setFormData} roleOptions={roleOptions} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddUser} className="bg-blue-600">
+                  Add User
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -241,5 +317,66 @@ export default function UsersPage() {
         </Card>
       </div>
     </ProtectedLayout>
+  )
+}
+
+function UserForm({
+  formData,
+  setFormData,
+  roleOptions,
+}: {
+  formData: CreateUserData
+  setFormData: React.Dispatch<React.SetStateAction<CreateUserData>>
+  roleOptions: string[]
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Email *</Label>
+        <Input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="user@echannelling.lk"
+          autoComplete="off"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Password *</Label>
+        <Input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+        />
+      </div>
+      <div>
+        <Label>Name</Label>
+        <Input
+          value={formData.name || ""}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Jane Doe"
+        />
+      </div>
+      <div>
+        <Label>Role</Label>
+        <Select
+          value={formData.role || ""}
+          onValueChange={(value) => setFormData({ ...formData, role: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   )
 }

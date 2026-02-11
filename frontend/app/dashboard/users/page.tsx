@@ -53,7 +53,7 @@ export default function UsersPage() {
     totalPages: 0
   })
 
-  const roleOptions = ["ADMIN", "DOCTOR", "HOSPITAL", "PATIENT"]
+  const roleOptions = ["ADMIN", "SUPERVISOR", "AGENT", "CORPORATE", "PATIENT"]
 
   useEffect(() => {
     fetchUsers()

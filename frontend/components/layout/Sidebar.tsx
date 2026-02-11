@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -174,7 +174,8 @@ const menuItems: MenuItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Corporate"])
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const storageKey = "dashboard_sidebar_expanded"
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => (prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]))
@@ -186,6 +187,43 @@ export function Sidebar() {
     }
     return pathname.includes(href)
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const stored = localStorage.getItem(storageKey)
+    if (!stored) {
+      return
+    }
+    try {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setExpandedItems(parsed)
+      }
+    } catch (error) {
+      // Ignore invalid storage data.
+    }
+  }, [storageKey])
+
+  useEffect(() => {
+    const activeParent = menuItems.find((item) =>
+      item.children?.some((child) => pathname.startsWith(child.href))
+    )?.title
+
+    if (!activeParent) {
+      return
+    }
+
+    setExpandedItems((prev) => (prev.includes(activeParent) ? prev : [...prev, activeParent]))
+  }, [pathname])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    localStorage.setItem(storageKey, JSON.stringify(expandedItems))
+  }, [expandedItems, storageKey])
 
   return (
     <aside className="w-64 bg-gradient-to-b from-blue-700 via-cyan-800 to-teal-900 text-white flex flex-col h-screen fixed left-0 top-0 shadow-xl">

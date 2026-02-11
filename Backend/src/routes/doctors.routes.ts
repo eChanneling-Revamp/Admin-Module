@@ -42,8 +42,8 @@ router.get('/:id',
 router.put('/:id', 
   requirePermission({ resource: 'doctor', action: 'update' }),
   validate(z.object({
-    body: updateDoctorSchema,
-    params: doctorParamsSchema,
+    body: updateDoctorSchema.shape.body,
+    params: doctorParamsSchema.shape.params,
   })), 
   doctorController.updateDoctor
 );

@@ -7,19 +7,53 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Search, UserPlus, MoreVertical, Edit, Trash2 } from "lucide-react"
-import { userApi, type User, type UserQueryParams } from "@/lib/api/userApi"
+import { userApi, type User, type UserQueryParams, type CreateUserData, type UpdateUserData } from "@/lib/api/userApi"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [formData, setFormData] = useState<CreateUserData>({
+    email: "",
+    password: "",
+    name: "",
+    role: "ADMIN",
+  })
+  const [editFormData, setEditFormData] = useState<UpdateUserData>({
+    name: "",
+    role: "ADMIN",
+    isActive: true,
+  })
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
     totalPages: 0
   })
+
+  const roleOptions = ["ADMIN", "SUPERVISOR", "AGENT", "CORPORATE", "PATIENT"]
 
   useEffect(() => {
     fetchUsers()
@@ -75,6 +109,69 @@ export default function UsersPage() {
     }
   }
 
+  const handleAddUser = async () => {
+    try {
+      await userApi.create({
+        email: formData.email.trim(),
+        password: formData.password,
+        name: formData.name?.trim() || undefined,
+        role: formData.role,
+      })
+      await fetchUsers()
+      setIsAddDialogOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error("Error creating user:", error)
+    }
+  }
+
+  const handleEditUser = async () => {
+    if (!selectedUser) {
+      return
+    }
+
+    try {
+      await userApi.update(selectedUser.id, {
+        name: editFormData.name?.trim() || undefined,
+        role: editFormData.role,
+        isActive: editFormData.isActive,
+      })
+      await fetchUsers()
+      setIsEditDialogOpen(false)
+      resetEditForm()
+    } catch (error) {
+      console.error("Error updating user:", error)
+    }
+  }
+
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user)
+    setEditFormData({
+      name: user.name || "",
+      role: user.role,
+      isActive: user.isActive,
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      email: "",
+      password: "",
+      name: "",
+      role: "ADMIN",
+    })
+  }
+
+  const resetEditForm = () => {
+    setSelectedUser(null)
+    setEditFormData({
+      name: "",
+      role: "ADMIN",
+      isActive: true,
+    })
+  }
+
   const stats = {
     total: pagination.total,
     active: users.filter(u => u.isActive).length,
@@ -98,10 +195,35 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-1">Manage all system users and their permissions</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add New User
-          </Button>
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open)
+              if (open) {
+                resetForm()
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add New User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+                <DialogDescription>Enter user details to add to the system</DialogDescription>
+              </DialogHeader>
+              <UserForm formData={formData} setFormData={setFormData} roleOptions={roleOptions} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddUser} className="bg-blue-600">
+                  Add User
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -178,7 +300,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -240,6 +362,155 @@ export default function UsersPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) {
+            resetEditForm()
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user details and permissions</DialogDescription>
+          </DialogHeader>
+          <EditUserForm
+            formData={editFormData}
+            setFormData={setEditFormData}
+            roleOptions={roleOptions}
+            selectedUser={selectedUser}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditUser} className="bg-blue-600">
+              Update User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedLayout>
+  )
+}
+
+function UserForm({
+  formData,
+  setFormData,
+  roleOptions,
+}: {
+  formData: CreateUserData
+  setFormData: React.Dispatch<React.SetStateAction<CreateUserData>>
+  roleOptions: string[]
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Email *</Label>
+        <Input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="user@echannelling.lk"
+          autoComplete="off"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Password *</Label>
+        <Input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+        />
+      </div>
+      <div>
+        <Label>Name</Label>
+        <Input
+          value={formData.name || ""}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Jane Doe"
+        />
+      </div>
+      <div>
+        <Label>Role</Label>
+        <Select
+          value={formData.role || ""}
+          onValueChange={(value) => setFormData({ ...formData, role: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  )
+}
+
+function EditUserForm({
+  formData,
+  setFormData,
+  roleOptions,
+  selectedUser,
+}: {
+  formData: UpdateUserData
+  setFormData: React.Dispatch<React.SetStateAction<UpdateUserData>>
+  roleOptions: string[]
+  selectedUser: User | null
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Email</Label>
+        <Input
+          type="email"
+          value={selectedUser?.email || ""}
+          readOnly
+          disabled
+        />
+      </div>
+      <div>
+        <Label>Name</Label>
+        <Input
+          value={formData.name || ""}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Jane Doe"
+        />
+      </div>
+      <div>
+        <Label>Role</Label>
+        <Select
+          value={formData.role || ""}
+          onValueChange={(value) => setFormData({ ...formData, role: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={!!formData.isActive}
+          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+        />
+        <Label>Active Status</Label>
+      </div>
+    </div>
   )
 }

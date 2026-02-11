@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { HospitalController, 
   createHospitalSchema, 
   updateHospitalSchema, 
+  updateHospitalRequestSchema,
   hospitalParamsSchema,
   hospitalQuerySchema 
 } from '../controllers/HospitalController';
@@ -48,10 +49,7 @@ router.get('/:id',
 
 router.put('/:id', 
   requirePermission({ resource: 'hospital', action: 'update' }),
-  validate(z.object({
-    body: updateHospitalSchema,
-    params: hospitalParamsSchema,
-  })), 
+  validate(updateHospitalRequestSchema), 
   hospitalController.updateHospital
 );
 

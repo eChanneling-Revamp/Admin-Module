@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react"
 import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
-import { Plus, Search, Edit, Trash2, MapPin, Phone, Mail, Building, Globe } from "lucide-react"
+import { Plus, Search, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -22,47 +22,32 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import { hospitalApi, type Hospital, type CreateHospitalData, type UpdateHospitalData } from "@/lib/api/hospitalApi"
 
-const provinces = [
-  "Western", "Central", "Southern", "Northern", "Eastern",
-  "North Western", "North Central", "Uva", "Sabaragamuwa"
-]
-
-const hospitalTypes = ["private", "government", "semi-government"]
+const createEmptyHospital = (): CreateHospitalData => ({
+  name: "",
+  email: "",
+  address: "",
+  city: "",
+  district: "",
+  contactNumber: "",
+  website: "",
+  facilities: [],
+})
 
 export default function HospitalsPage() {
   const [hospitals, setHospitals] = useState<Hospital[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [filterProvince, setFilterProvince] = useState<string>("all")
-  const [filterType, setFilterType] = useState<string>("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null)
-  const [formData, setFormData] = useState<CreateHospitalData>({
-    name: "",
-    email: "",
-    address: undefined,
-    city: undefined,
-    district: undefined,
-    contactNumber: undefined,
-    website: undefined,
-    facilities: [],
-    profileImage: undefined,
-  })
+  const [formData, setFormData] = useState<CreateHospitalData>(createEmptyHospital())
+  const [facilitiesText, setFacilitiesText] = useState("")
 
   useEffect(() => {
     fetchHospitals()
@@ -82,7 +67,11 @@ export default function HospitalsPage() {
 
   const handleAddHospital = async () => {
     try {
-      await hospitalApi.create(formData)
+      const payload: CreateHospitalData = {
+        ...formData,
+        facilities: (formData.facilities ?? []).filter(Boolean),
+      }
+      await hospitalApi.create(payload)
       await fetchHospitals()
       setIsAddDialogOpen(false)
       resetForm()
@@ -95,7 +84,11 @@ export default function HospitalsPage() {
     if (!selectedHospital) return
     
     try {
-      await hospitalApi.update(selectedHospital.id, formData as UpdateHospitalData)
+      const payload: UpdateHospitalData = {
+        ...formData,
+        facilities: (formData.facilities ?? []).filter(Boolean),
+      }
+      await hospitalApi.update(selectedHospital.id, payload)
       await fetchHospitals()
       setIsEditDialogOpen(false)
       resetForm()
@@ -118,32 +111,35 @@ export default function HospitalsPage() {
   const openEditDialog = (hospital: Hospital) => {
     setSelectedHospital(hospital)
     setFormData({
-      name: hospital.name,
-      email: hospital.email,
-      address: hospital.address || undefined,
-      city: hospital.city || undefined,
-      district: hospital.district || undefined,
-      contactNumber: hospital.contactNumber || undefined,
-      website: hospital.website || undefined,
-      facilities: hospital.facilities,
-      profileImage: hospital.profileImage || undefined,
+      name: hospital.name ?? "",
+      email: hospital.email ?? "",
+      address: hospital.address ?? "",
+      city: hospital.city ?? "",
+      district: hospital.district ?? "",
+      contactNumber: hospital.contactNumber ?? "",
+      website: hospital.website ?? "",
+      facilities: hospital.facilities ?? [],
     })
+    setFacilitiesText((hospital.facilities ?? []).join(", "))
     setIsEditDialogOpen(true)
   }
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      email: "",
-      address: undefined,
-      city: undefined,
-      district: undefined,
-      contactNumber: undefined,
-      website: undefined,
-      facilities: [],
-      profileImage: undefined,
-    })
+    setFormData(createEmptyHospital())
     setSelectedHospital(null)
+    setFacilitiesText("")
+  }
+
+  const handleFacilitiesChange = (value: string) => {
+    setFacilitiesText(value)
+    const facilitiesArray = value
+      .split(",")
+      .map((facility) => facility.trim())
+      .filter(Boolean)
+    setFormData((prev) => ({
+      ...prev,
+      facilities: facilitiesArray,
+    }))
   }
 
   const filteredHospitals = hospitals.filter((hospital) => {
@@ -182,19 +178,24 @@ export default function HospitalsPage() {
                 Add New Hospital
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Hospital</DialogTitle>
-              <DialogDescription>Enter hospital details to add to the system</DialogDescription>
-            </DialogHeader>
-            <HospitalForm formData={formData} setFormData={setFormData} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleAddHospital} className="bg-blue-600">
-                Add Hospital
-              </Button>
-            </DialogFooter>
-          </DialogContent>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Hospital</DialogTitle>
+                <DialogDescription>Enter hospital details to add to the system</DialogDescription>
+              </DialogHeader>
+              <HospitalForm
+                formData={formData}
+                setFormData={setFormData}
+                facilitiesText={facilitiesText}
+                onFacilitiesChange={handleFacilitiesChange}
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddHospital} className="bg-blue-600">
+                  Add Hospital
+                </Button>
+              </DialogFooter>
+            </DialogContent>
         </Dialog>
       </div>
 
@@ -288,7 +289,12 @@ export default function HospitalsPage() {
             <DialogTitle>Edit Hospital</DialogTitle>
             <DialogDescription>Update hospital information</DialogDescription>
           </DialogHeader>
-          <HospitalForm formData={formData} setFormData={setFormData} />
+          <HospitalForm
+            formData={formData}
+            setFormData={setFormData}
+            facilitiesText={facilitiesText}
+            onFacilitiesChange={handleFacilitiesChange}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleEditHospital} className="bg-blue-600">
@@ -302,39 +308,30 @@ export default function HospitalsPage() {
   )
 }
 
-function HospitalForm({ formData, setFormData }: any) {
+type HospitalFormProps = {
+  formData: CreateHospitalData
+  setFormData: Dispatch<SetStateAction<CreateHospitalData>>
+  facilitiesText: string
+  onFacilitiesChange: (value: string) => void
+}
+
+function HospitalForm({ formData, setFormData, facilitiesText, onFacilitiesChange }: HospitalFormProps) {
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-2">
         <Label>Hospital Name *</Label>
         <Input
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Lanka Hospital"
-        />
-      </div>
-      <div>
-        <Label>Name in Sinhala</Label>
-        <Input
-          value={formData.nameInSinhala}
-          onChange={(e) => setFormData({ ...formData, nameInSinhala: e.target.value })}
-          placeholder="ලංකා රෝහල"
-        />
-      </div>
-      <div>
-        <Label>Hospital Code *</Label>
-        <Input
-          value={formData.hospitalCode}
-          onChange={(e) => setFormData({ ...formData, hospitalCode: e.target.value })}
-          placeholder="LH001"
+          onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="Colombo Health Center"
         />
       </div>
       <div className="col-span-2">
         <Label>Address *</Label>
         <Textarea
           value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          placeholder="578, Elvitigala Mawatha, Colombo 05"
+          onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+          placeholder="120 Galle Road"
           rows={2}
         />
       </div>
@@ -342,7 +339,7 @@ function HospitalForm({ formData, setFormData }: any) {
         <Label>City *</Label>
         <Input
           value={formData.city}
-          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
           placeholder="Colombo"
         />
       </div>
@@ -350,44 +347,17 @@ function HospitalForm({ formData, setFormData }: any) {
         <Label>District *</Label>
         <Input
           value={formData.district}
-          onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, district: e.target.value }))}
           placeholder="Colombo"
         />
       </div>
       <div>
-        <Label>Province *</Label>
-        <Select value={formData.province} onValueChange={(value) => setFormData({ ...formData, province: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select Province" />
-          </SelectTrigger>
-          <SelectContent>
-            {provinces.map((province) => (
-              <SelectItem key={province} value={province}>{province}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Hospital Type *</Label>
-        <Select value={formData.hospitalType} onValueChange={(value) => setFormData({ ...formData, hospitalType: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {hospitalTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Phone *</Label>
+        <Label>Contact Number *</Label>
         <Input
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          placeholder="+94112345678"
+          type="tel"
+          value={formData.contactNumber}
+          onChange={(e) => setFormData((prev) => ({ ...prev, contactNumber: e.target.value }))}
+          placeholder="+94-11-234-5678"
         />
       </div>
       <div>
@@ -395,39 +365,28 @@ function HospitalForm({ formData, setFormData }: any) {
         <Input
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          placeholder="info@hospital.lk"
+          onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+          placeholder="info@colombohealth.lk"
         />
       </div>
       <div>
         <Label>Website</Label>
         <Input
+          type="url"
           value={formData.website}
-          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-          placeholder="www.hospital.lk"
+          onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
+          placeholder="https://colombohealth.lk"
         />
       </div>
-      <div>
-        <Label>Hospital Group</Label>
-        <Input
-          value={formData.hospitalGroup}
-          onChange={(e) => setFormData({ ...formData, hospitalGroup: e.target.value })}
-          placeholder="Lanka Hospitals Group"
+      <div className="col-span-2">
+        <Label>Facilities (comma separated)</Label>
+        <Textarea
+          value={facilitiesText}
+          onChange={(e) => onFacilitiesChange(e.target.value)}
+          placeholder="Emergency, ICU, Cardiology, Pharmacy"
+          rows={2}
         />
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={formData.emergencyAvailable}
-          onCheckedChange={(checked) => setFormData({ ...formData, emergencyAvailable: checked })}
-        />
-        <Label>24/7 Emergency Available</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={formData.isActive}
-          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-        />
-        <Label>Active Status</Label>
+        <p className="text-xs text-gray-500 mt-1">Press comma to separate multiple facilities.</p>
       </div>
     </div>
   )

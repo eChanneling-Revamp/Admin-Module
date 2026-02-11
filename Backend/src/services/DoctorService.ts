@@ -7,9 +7,6 @@ export class DoctorService {
       logger.info('Starting to fetch all doctors from database');
       
       const doctors = await prisma.doctor.findMany({
-        where: { 
-          isActive: true 
-        },
         select: {
           id: true,
           name: true,

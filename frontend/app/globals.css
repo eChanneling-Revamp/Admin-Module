@@ -130,5 +130,33 @@
   html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
+   /* Responsive utility classes */
+   .responsive-container {
+     @apply w-full max-w-screen-xl mx-auto px-2 md:px-6;
+   }
+   .responsive-grid {
+     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+   }
+   .responsive-text {
+     @apply text-sm md:text-base lg:text-lg;
+   }
+   .responsive-card {
+     @apply rounded-lg shadow-md p-2 md:p-4 bg-white;
+   }
+   .responsive-table {
+     @apply w-full overflow-x-auto;
+   }
+   .responsive-image {
+     @apply w-full h-auto max-w-xs md:max-w-md lg:max-w-lg;
+   }
+   .responsive-btn {
+     @apply px-2 py-1 md:px-4 md:py-2 rounded bg-primary text-white hover:bg-primary-foreground transition;
+   }
+   .responsive-input {
+     @apply w-full px-2 py-1 md:px-4 md:py-2 border rounded focus:ring focus:border-primary;
+   }
+   .responsive-flex {
+     @apply flex flex-col md:flex-row gap-2 md:gap-4;
+   }
 }
 

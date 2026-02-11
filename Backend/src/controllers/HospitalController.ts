@@ -49,6 +49,9 @@ const hospitalQuerySchema = z.object({
   }),
 });
 
+// Combined schemas for multi-part validation
+const updateHospitalRequestSchema = updateHospitalSchema.merge(hospitalParamsSchema);
+
 export class HospitalController {
   private hospitalService = new HospitalService();
 
@@ -159,6 +162,7 @@ export class HospitalController {
 export {
   createHospitalSchema,
   updateHospitalSchema,
+  updateHospitalRequestSchema,
   hospitalParamsSchema,
   hospitalQuerySchema,
 };

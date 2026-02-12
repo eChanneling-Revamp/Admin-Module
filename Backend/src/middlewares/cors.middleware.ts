@@ -9,7 +9,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    const allowedOrigins = env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+    const allowedOrigins = env.CORS_ORIGIN;
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -39,7 +39,13 @@ export const corsMiddleware = cors(corsOptions);
 
 export const corsPreflight = (req: Request, res: Response, next: NextFunction): void => {
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    const requestOrigin = req.headers.origin;
+    const isAllowedOrigin = requestOrigin ? env.CORS_ORIGIN.includes(requestOrigin) : false;
+
+    if (isAllowedOrigin && requestOrigin) {
+      res.header('Access-Control-Allow-Origin', requestOrigin);
+    }
+
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
     res.header('Access-Control-Allow-Credentials', 'true');

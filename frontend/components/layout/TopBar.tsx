@@ -13,11 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, LogOut, User, Settings } from "lucide-react"
+import { Bell, LogOut, User, Settings, Menu } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import Image from "next/image"
 
-export function TopBar() {
+interface Props {
+  setSidebarOpen: (value: boolean) => void
+}
+
+export default function TopBar({ setSidebarOpen }: Props) {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [notificationCount] = useState(3)
@@ -27,121 +30,91 @@ export function TopBar() {
     router.push("/login")
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "A"
+    return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase()
   }
 
   return (
-    <header className="h-16 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 border-b border-cyan-700 flex items-center justify-between px-6 fixed top-0 right-0 left-64 z-10 shadow-md">
-      <div className="flex items-center gap-4">
-        <h2 className="text-xl font-semibold text-white">eChannelling Admin Dashboard</h2>
+    <header className="fixed top-0 left-0 md:left-64 right-0 h-16 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 border-b border-cyan-700 shadow-md flex items-center px-4 md:px-6 z-40">
+
+      {/* Left */}
+      <div className="flex items-center gap-3">
+        {/* Hamburger (mobile only) */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden text-white p-2 rounded-lg hover:bg-white/20 transition"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
+        <h2 className="text-white font-semibold text-sm sm:text-base md:text-xl whitespace-nowrap">
+          eChannelling Admin Dashboard
+        </h2>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Right */}
+      <div className="ml-auto flex items-center gap-2 md:gap-4">
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative hover:bg-cyan-700/50 text-white">
-              <Bell className="w-5 h-5 text-white" />
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20">
+              <Bell className="w-5 h-5" />
               {notificationCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500 text-white flex items-center justify-center">
                   {notificationCount}
                 </Badge>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuContent align="end" className="w-72">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="max-h-96 overflow-y-auto">
-              <DropdownMenuItem className="flex flex-col items-start py-3">
-                <p className="font-medium text-sm">New appointment scheduled</p>
-                <p className="text-xs text-gray-500">Patient ID: PT-1001 • 2 hours ago</p>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start py-3">
-                <p className="font-medium text-sm">Doctor schedule updated</p>
-                <p className="text-xs text-gray-500">Dr. Smith • 4 hours ago</p>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start py-3">
-                <p className="font-medium text-sm">New branch registered</p>
-                <p className="text-xs text-gray-500">Galle Branch • 1 day ago</p>
-              </DropdownMenuItem>
-            </div>
+            <DropdownMenuItem>New appointment scheduled</DropdownMenuItem>
+            <DropdownMenuItem>Doctor schedule updated</DropdownMenuItem>
+            <DropdownMenuItem>New branch registered</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Menu with Admin Icon */}
+        {/* User */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-3 hover:bg-white/20 text-white transition-all duration-300 rounded-full px-3 py-2 hover:shadow-lg"
-            >
-              <Avatar className="h-10 w-10 ring-2 ring-white/60 hover:ring-white hover:ring-4 transition-all duration-300 cursor-pointer shadow-lg">
-                <AvatarImage src="/admin.webp" alt={user?.name || "Admin"} className="object-cover" />
-                <AvatarFallback className="bg-white text-cyan-700 font-bold text-base">
-                  {user ? getInitials(user.name) : "A"}
+            <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/20 px-2 md:px-3 rounded-full">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src="/admin.webp" />
+                <AvatarFallback>
+                  {user ? getInitials(user.firstName, user.lastName) : "A"}
                 </AvatarFallback>
               </Avatar>
-              <div className="text-left hidden md:block">
-                <p className="text-sm font-semibold text-white drop-shadow-md">{user?.name || "Admin User"}</p>
-                <p className="text-xs text-cyan-50 capitalize font-medium">{user?.role || "Administrator"}</p>
+
+              <div className="hidden md:block text-left">
+                <p className="text-sm font-semibold">
+                  {user?.firstName ?? "Admin"}
+                </p>
+                <p className="text-xs text-cyan-100">
+                  {user?.role ?? "Administrator"}
+                </p>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-72 p-2 shadow-2xl border-2 border-cyan-100 animate-in slide-in-from-top-2 duration-300"
-          >
-            <DropdownMenuLabel className="font-normal p-0 mb-2">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 via-cyan-50 to-teal-50 rounded-lg border border-cyan-100">
-                <Avatar className="h-14 w-14 ring-2 ring-cyan-400 shadow-md">
-                  <AvatarImage src="/admin.webp" alt={user?.name || "Admin"} className="object-cover" />
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-teal-600 text-white font-bold text-lg">
-                    {user ? getInitials(user.name) : "A"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col flex-1">
-                  <p className="text-base font-bold text-gray-900">{user?.name || "Admin User"}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{user?.email || "admin@echannelling.lk"}</p>
-                  <Badge className="bg-gradient-to-r from-cyan-600 to-teal-600 text-white text-xs mt-1.5 w-fit px-2 py-0.5 capitalize">
-                    {user?.role || "Administrator"}
-                  </Badge>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="my-2" />
-            <DropdownMenuItem className="cursor-pointer p-3 rounded-md hover:bg-cyan-50 transition-colors duration-200">
-              <User className="w-5 h-5 mr-3 text-cyan-600" />
-              <span className="font-medium text-gray-700">View Profile</span>
+
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem>
+              <User className="w-4 h-4 mr-2" />
+              View Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer p-3 rounded-md hover:bg-cyan-50 transition-colors duration-200">
-              <Settings className="w-5 h-5 mr-3 text-cyan-600" />
-              <span className="font-medium text-gray-700">Account Settings</span>
+            <DropdownMenuItem>
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-2" />
-            <DropdownMenuItem 
-              onClick={handleLogout} 
-              className="cursor-pointer p-3 rounded-md bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border border-red-200 transition-all duration-200 group"
-            >
-              <LogOut className="w-5 h-5 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
-              <span className="font-bold text-red-600 text-base group-hover:text-red-700">Logout</span>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2 text-red-500" />
+              Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Prominent Logout Button */}
-        <Button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-        >
-          <LogOut className="w-4 h-4" />
-          <span className="hidden lg:inline">Logout</span>
-        </Button>
       </div>
     </header>
   )

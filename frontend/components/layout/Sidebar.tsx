@@ -1,18 +1,15 @@
 "use client"
 
 import type React from "react"
-
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   Building2,
-  Users,
   Stethoscope,
   CreditCard,
-  Wallet,
   FileText,
   Settings,
   ChevronDown,
@@ -21,15 +18,16 @@ import {
   UserCog,
   Briefcase,
   Tags,
-  DollarSign,
-  RotateCcw,
   Building,
   BarChart3,
   Shield,
   Plug,
-  Award,
-  Calendar,
 } from "lucide-react"
+
+interface SidebarProps {
+  sidebarOpen: boolean
+  setSidebarOpen: (value: boolean) => void
+}
 
 interface MenuItem {
   title: string
@@ -172,140 +170,113 @@ const menuItems: MenuItem[] = [
   },
 ]
 
-export function Sidebar() {
+export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>([])
-  const storageKey = "dashboard_sidebar_expanded"
 
   const toggleExpand = (title: string) => {
-    setExpandedItems((prev) => (prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]))
+    setExpandedItems((prev) =>
+      prev.includes(title)
+        ? prev.filter((item) => item !== title)
+        : [...prev, title]
+    )
   }
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === href
-    }
+    if (href === "/dashboard") return pathname === href
     return pathname.includes(href)
   }
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-    const stored = localStorage.getItem(storageKey)
-    if (!stored) {
-      return
-    }
-    try {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed)) {
-        setExpandedItems(parsed)
-      }
-    } catch (error) {
-      // Ignore invalid storage data.
-    }
-  }, [storageKey])
-
-  useEffect(() => {
-    const activeParent = menuItems.find((item) =>
-      item.children?.some((child) => pathname.startsWith(child.href))
-    )?.title
-
-    if (!activeParent) {
-      return
-    }
-
-    setExpandedItems((prev) => (prev.includes(activeParent) ? prev : [...prev, activeParent]))
-  }, [pathname])
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-    localStorage.setItem(storageKey, JSON.stringify(expandedItems))
-  }, [expandedItems, storageKey])
-
   return (
-    <aside className="w-64 bg-gradient-to-b from-blue-700 via-cyan-800 to-teal-900 text-white flex flex-col h-screen fixed left-0 top-0 shadow-xl">
-      {/* Logo */}
-      <div className="p-6 border-b border-cyan-600/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
-            <span className="text-2xl font-bold bg-gradient-to-br from-blue-600 to-teal-600 bg-clip-text text-transparent">e</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">eChannelling</h1>
-            <p className="text-xs text-cyan-200">Admin Portal</p>
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <ul className="space-y-1 px-3">
-          {menuItems.map((item) => (
-            <li key={item.title}>
-              {item.children ? (
-                <div>
-                  <button
-                    onClick={() => toggleExpand(item.title)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gradient-to-r hover:from-cyan-600/50 hover:to-teal-600/50",
-                      expandedItems.includes(item.title) && "bg-gradient-to-r from-cyan-600/40 to-teal-600/40",
-                    )}
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="flex-shrink-0">{item.icon}</div>
-                      <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</span>
-                    </div>
-                    <div className="flex-shrink-0 ml-2">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-blue-700 via-cyan-800 to-teal-900 text-white flex flex-col shadow-xl z-50 transform transition-transform duration-300 h-full md:h-screen",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "md:translate-x-0"
+        )}
+      >
+        {/* Logo */}
+        <div className="p-6 border-b border-cyan-600/50">
+          <h1 className="text-xl font-bold">eChannelling</h1>
+          <p className="text-xs text-cyan-200">Admin Portal</p>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <ul className="space-y-1 px-3">
+            {menuItems.map((item) => (
+              <li key={item.title}>
+                {item.children ? (
+                  <>
+                    <button
+                      onClick={() => toggleExpand(item.title)}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-cyan-600/40 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        {item.icon}
+                        <span className="text-sm">{item.title}</span>
+                      </div>
                       {expandedItems.includes(item.title) ? (
                         <ChevronDown className="w-4 h-4" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />
                       )}
-                    </div>
-                  </button>
-                  {expandedItems.includes(item.title) && (
-                    <ul className="mt-1 ml-4 space-y-1">
-                      {item.children.map((child) => (
-                        <li key={child.href}>
-                          <Link
-                            href={child.href}
-                            className={cn(
-                              "block px-4 py-2 rounded-lg transition-all duration-200 hover:bg-gradient-to-r hover:from-cyan-600/50 hover:to-teal-600/50 text-sm whitespace-nowrap overflow-hidden text-ellipsis",
-                              isActive(child.href) && "bg-gradient-to-r from-cyan-500/40 to-teal-500/40 font-medium border-l-2 border-cyan-300",
-                            )}
-                          >
-                            {child.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  href={item.href!}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gradient-to-r hover:from-cyan-600/50 hover:to-teal-600/50",
-                    isActive(item.href!) && "bg-gradient-to-r from-cyan-500/40 to-teal-500/40 font-medium border-l-2 border-cyan-300",
-                  )}
-                >
-                  <div className="flex-shrink-0">{item.icon}</div>
-                  <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</span>
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
-      </nav>
+                    </button>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-cyan-600/50 bg-gradient-to-r from-cyan-900/30 to-teal-900/30">
-        <p className="text-xs text-cyan-200 text-center font-medium">© 2025 eChannelling</p>
-        <p className="text-xs text-teal-300 text-center mt-1">Powered by SLT</p>
-      </div>
-    </aside>
+                    {expandedItems.includes(item.title) && (
+                      <ul className="ml-6 mt-1 space-y-1">
+                        {item.children.map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              onClick={() => setSidebarOpen(false)}
+                              className={cn(
+                                "block px-3 py-2 rounded-md text-sm hover:bg-cyan-600/40",
+                                isActive(child.href) &&
+                                  "bg-cyan-500/40 font-medium"
+                              )}
+                            >
+                              {child.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600/40 transition",
+                      isActive(item.href!) &&
+                        "bg-cyan-500/40 font-medium"
+                    )}
+                  >
+                    {item.icon}
+                    <span className="text-sm">{item.title}</span>
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-cyan-600/50 text-center text-xs text-cyan-200">
+          © 2025 eChannelling
+        </div>
+      </aside>
+    </>
   )
 }

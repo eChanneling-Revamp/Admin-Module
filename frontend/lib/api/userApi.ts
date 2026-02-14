@@ -45,6 +45,14 @@ export interface PaginatedUsers {
   totalPages: number
 }
 
+export interface UserStats {
+  total: number
+  active: number
+  inactive: number
+  byRole: Record<string, number>
+  recentLogins: number
+}
+
 export const userApi = {
   getAll: async (params?: UserQueryParams): Promise<PaginatedUsers> => {
     console.log('User API: Fetching users with params:', params);
@@ -178,7 +186,7 @@ export const userApi = {
     return data.data || data
   },
 
-  getStats: async () => {
+  getStats: async (): Promise<UserStats> => {
     const response = await fetch(`${API_BASE_URL}/api/users/stats`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -191,6 +199,6 @@ export const userApi = {
     }
 
     const data = await response.json();
-    return data.data || data
+    return (data.data || data) as UserStats
   },
 }

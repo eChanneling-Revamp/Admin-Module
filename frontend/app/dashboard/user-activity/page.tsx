@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -7,28 +8,78 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Download, Filter } from "lucide-react"
+import { userApi, type User } from "@/lib/api/userApi"
 
-const activityLogs = [
-  { id: 1, user: "Nimal Perera", action: "Updated hospital details", resource: "Asiri Hospital Colombo", timestamp: "2025-10-30 14:35:22", ip: "192.168.1.101", status: "Success" },
-  { id: 2, user: "Kamala Silva", action: "Added new doctor", resource: "Dr. Sunil Perera", timestamp: "2025-10-30 13:20:15", ip: "192.168.1.205", status: "Success" },
-  { id: 3, user: "Sunil Fernando", action: "Modified agent commission", resource: "Dialog Telco Agent", timestamp: "2025-10-30 12:45:08", ip: "192.168.1.87", status: "Success" },
-  { id: 4, user: "Rohan De Silva", action: "Failed login attempt", resource: "Admin Portal", timestamp: "2025-10-30 11:30:42", ip: "203.115.42.18", status: "Failed" },
-  { id: 5, user: "Dilani Wickramasinghe", action: "Generated financial report", resource: "Monthly Revenue Report", timestamp: "2025-10-30 10:15:33", ip: "192.168.1.156", status: "Success" },
-  { id: 6, user: "Kasun Rajapaksa", action: "Processed refund", resource: "Invoice #LK-2025-8847", timestamp: "2025-10-30 09:50:20", ip: "192.168.1.142", status: "Success" },
-  { id: 7, user: "Nadeesha Gunasekara", action: "Updated fee structure", resource: "Lanka Hospitals Platform Fee", timestamp: "2025-10-30 09:25:11", ip: "192.168.1.178", status: "Success" },
-  { id: 8, user: "Sanduni Jayawardena", action: "Deleted branch", resource: "Gampaha Sub Branch", timestamp: "2025-10-30 08:40:05", ip: "192.168.1.193", status: "Success" },
+type ActivityLog = {
+  id: string | number
+  user: string
+  action: string
+  resource: string
+  timestamp: string
+  ip?: string
+  status: string
+}
+
+const FALLBACK_LOGS: ActivityLog[] = [
+  { id: 1, user: "System", action: "No recent activity", resource: "users", timestamp: new Date().toISOString(), status: "Info" }
 ]
 
 export default function UserActivityPage() {
+  const [logs, setLogs] = useState<ActivityLog[]>(FALLBACK_LOGS)
+  const [loading, setLoading] = useState(false)
+  const [live, setLive] = useState(false)
+
+  const fetchLogsFromUsers = async () => {
+    setLoading(true)
+    try {
+      // fetch recent users sorted by lastLoginAt (descending)
+      const res = await userApi.getAll({ page: 1, limit: 10, sortBy: 'lastLoginAt', sortOrder: 'desc' })
+      const users = res.users as User[]
+
+      if (Array.isArray(users) && users.length > 0) {
+        const mapped: ActivityLog[] = users.map((u) => ({
+          id: u.id,
+          user: u.name || u.email,
+          action: u.lastLoginAt ? 'User login' : 'User account',
+          resource: u.role || 'user',
+          timestamp: (u.lastLoginAt || u.createdAt) as string,
+          status: u.isActive ? 'Success' : 'Inactive'
+        }))
+        setLogs(mapped)
+      } else {
+        setLogs(FALLBACK_LOGS)
+      }
+    } catch (error) {
+      console.error('Failed to fetch users for activity logs', error)
+      setLogs(FALLBACK_LOGS)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchLogsFromUsers()
+    if (!live) return
+
+    const id = setInterval(() => {
+      fetchLogsFromUsers()
+    }, 10000) // poll every 10s
+
+    return () => clearInterval(id)
+  }, [live])
+
   return (
     <ProtectedLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">User Activity Logs</h1>
-            <p className="text-gray-600 mt-1">Monitor user actions and system activities</p>
+            <p className="text-gray-600 mt-1">Monitor user actions and system activities (live from users table)</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setLive(!live)}>
+              {live ? 'Live: ON' : 'Live: OFF'}
+            </Button>
             <Button variant="outline">
               <Filter className="w-4 h-4 mr-2" />
               Filter
@@ -46,35 +97,35 @@ export default function UserActivityPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Total Activities</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">2,547</div>
-              <p className="text-xs text-gray-600 mt-1">Last 30 days</p>
+              <div className="text-3xl font-bold">{logs.length}</div>
+              <p className="text-xs text-gray-600 mt-1">Showing recent items</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Successful</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">2,521</div>
-              <p className="text-xs text-gray-600 mt-1">99.0% success rate</p>
+              <div className="text-3xl font-bold text-green-600">{logs.filter(l => l.status === 'Success').length}</div>
+              <p className="text-xs text-gray-600 mt-1">Active entries</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Failed Attempts</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Inactive</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">26</div>
-              <p className="text-xs text-gray-600 mt-1">1.0% failure rate</p>
+              <div className="text-3xl font-bold text-red-600">{logs.filter(l => l.status === 'Inactive').length}</div>
+              <p className="text-xs text-gray-600 mt-1">Inactive entries</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Active Users Today</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Source</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">34</div>
-              <p className="text-xs text-gray-600 mt-1">Across all locations</p>
+              <div className="text-3xl font-bold">Users</div>
+              <p className="text-xs text-gray-600 mt-1">Sourced from users table</p>
             </CardContent>
           </Card>
         </div>
@@ -105,20 +156,26 @@ export default function UserActivityPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activityLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.user}</TableCell>
-                    <TableCell>{log.action}</TableCell>
-                    <TableCell>{log.resource}</TableCell>
-                    <TableCell className="text-sm text-gray-600">{log.timestamp}</TableCell>
-                    <TableCell className="text-sm text-gray-600">{log.ip}</TableCell>
-                    <TableCell>
-                      <Badge variant={log.status === "Success" ? "default" : "destructive"}>
-                        {log.status}
-                      </Badge>
-                    </TableCell>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  logs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.user}</TableCell>
+                      <TableCell>{log.action}</TableCell>
+                      <TableCell>{log.resource}</TableCell>
+                      <TableCell className="text-sm text-gray-600">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                      <TableCell className="text-sm text-gray-600">{log.ip || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={log.status === "Success" ? "default" : "destructive"}>
+                          {log.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

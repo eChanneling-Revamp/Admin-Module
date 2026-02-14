@@ -154,4 +154,23 @@ export const hospitalApi = {
 
     return response.json()
   },
+
+  updateStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<Hospital> => {
+    const response = await fetch(`${API_BASE_URL}/api/hospitals/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error('Hospital API: Failed to update status', response.status, text);
+      throw new Error('Failed to update hospital status')
+    }
+
+    return response.json()
+  },
 }

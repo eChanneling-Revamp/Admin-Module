@@ -60,6 +60,15 @@ const updateHospitalStatusSchema = z.object({
   })
 });
 
+const updateHospitalFacilitiesSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, 'Hospital ID is required'),
+  }),
+  body: z.object({
+    facilities: z.array(z.string().trim().min(1, 'Facility name is required')).default([])
+  })
+});
+
 export class HospitalController {
   private hospitalService = new HospitalService();
 
@@ -193,6 +202,25 @@ export class HospitalController {
       ResponseHelper.badRequest(res, 'Failed to retrieve hospital groups');
     }
   });
+
+  updateHospitalFacilities = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { facilities } = req.body;
+
+    try {
+      const hospital = await this.hospitalService.updateHospitalFacilities(id, facilities);
+
+      if (!hospital) {
+        ResponseHelper.notFound(res, 'Hospital not found');
+        return;
+      }
+
+      ResponseHelper.success(res, hospital, 'Hospital facilities updated successfully');
+    } catch (error) {
+      logger.error('Update hospital facilities error:', error);
+      ResponseHelper.badRequest(res, 'Failed to update hospital facilities');
+    }
+  });
 }
 
 // Export validation schemas
@@ -203,4 +231,5 @@ export {
   hospitalParamsSchema,
   hospitalQuerySchema,
   updateHospitalStatusSchema,
+  updateHospitalFacilitiesSchema,
 };

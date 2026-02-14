@@ -5,7 +5,8 @@ import { HospitalController,
   updateHospitalRequestSchema,
   hospitalParamsSchema,
   hospitalQuerySchema,
-  updateHospitalStatusSchema
+  updateHospitalStatusSchema,
+  updateHospitalFacilitiesSchema
 } from '../controllers/HospitalController';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticateToken, requireActiveUser } from '../middlewares/auth.middleware';
@@ -69,6 +70,12 @@ router.patch('/:id/status',
   requirePermission({ resource: 'hospital', action: 'update' }),
   validate(updateHospitalStatusSchema),
   hospitalController.updateHospitalStatus
+);
+
+router.patch('/:id/facilities',
+  requirePermission({ resource: 'hospital', action: 'update' }),
+  validate(updateHospitalFacilitiesSchema),
+  hospitalController.updateHospitalFacilities
 );
 
 export default router;

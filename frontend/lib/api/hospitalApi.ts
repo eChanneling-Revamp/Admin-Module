@@ -201,6 +201,24 @@ export const hospitalApi = {
     return response.json()
   },
 
+  updateFacilities: async (id: string, facilities: string[]): Promise<Hospital> => {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/api/hospitals/${id}/facilities`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ facilities }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update hospital facilities')
+    }
+
+    return response.json()
+  },
+
   getGroups: async (): Promise<HospitalGroup[]> => {
     const token = localStorage.getItem('auth_token');
     const response = await fetch(`${API_BASE_URL}/api/hospitals/groups`, {

@@ -272,6 +272,35 @@ export class HospitalService {
     }
   }
 
+  async updateHospitalFacilities(id: string, facilities: string[]): Promise<any | null> {
+    try {
+      const hospital = await prisma.hospital.update({
+        where: { id },
+        data: { facilities },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          city: true,
+          district: true,
+          contactNumber: true,
+          email: true,
+          website: true,
+          facilities: true,
+          isActive: true,
+          createdAt: true,
+          status: true,
+          profileImage: true,
+        },
+      });
+
+      return hospital;
+    } catch (error) {
+      logger.error('Error updating hospital facilities:', error);
+      return null;
+    }
+  }
+
   async getHospitalGroups(): Promise<HospitalGroupSummary[]> {
     try {
       const hospitals = await prisma.hospital.findMany({

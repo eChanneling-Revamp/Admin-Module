@@ -68,6 +68,57 @@ export default function UserActivityPage() {
     return () => clearInterval(id)
   }, [live])
 
+  const exportLogsAsPDF = () => {
+    try {
+      const cols = ['User', 'Action', 'Resource', 'Timestamp', 'IP', 'Status']
+      const rows = logs.map(l => [l.user, l.action, l.resource, new Date(l.timestamp).toLocaleString(), l.ip || '-', l.status])
+
+      const htmlRows = rows.map(r => `
+        <tr>
+          ${r.map(c => `<td style="padding:8px;border:1px solid #ddd">${String(c)}</td>`).join('')}
+        </tr>
+      `).join('')
+
+      const html = `
+        <html>
+          <head>
+            <title>User Activity Logs</title>
+          </head>
+          <body>
+            <h2>User Activity Logs</h2>
+            <table style="border-collapse:collapse;width:100%">
+              <thead>
+                <tr>
+                  ${cols.map(c => `<th style="padding:8px;border:1px solid #ddd;background:#f5f5f5">${c}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${htmlRows}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `
+
+      const printWindow = window.open('', '_blank')
+      if (!printWindow) {
+        alert('Unable to open print window. Please allow popups for this site.')
+        return
+      }
+
+      printWindow.document.write(html)
+      printWindow.document.close()
+      printWindow.focus()
+      // small timeout to ensure rendering
+      setTimeout(() => {
+        printWindow.print()
+      }, 300)
+    } catch (error) {
+      console.error('Export PDF failed', error)
+      alert('Export failed')
+    }
+  }
+
   return (
     <ProtectedLayout>
       <div className="space-y-6">
@@ -84,7 +135,7 @@ export default function UserActivityPage() {
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={exportLogsAsPDF} disabled={loading || logs.length === 0}>
               <Download className="w-4 h-4 mr-2" />
               Export Logs
             </Button>

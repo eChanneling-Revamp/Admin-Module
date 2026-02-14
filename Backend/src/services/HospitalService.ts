@@ -210,6 +210,35 @@ export class HospitalService {
       return [];
     }
   }
+
+  async updateHospitalStatus(id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<any | null> {
+    try {
+      const hospital = await prisma.hospital.update({
+        where: { id },
+        data: { status },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          city: true,
+          district: true,
+          contactNumber: true,
+          email: true,
+          website: true,
+          facilities: true,
+          isActive: true,
+          createdAt: true,
+          status: true,
+          profileImage: true
+        }
+      });
+
+      return hospital;
+    } catch (error) {
+      logger.error('Error updating hospital status:', error);
+      return null;
+    }
+  }
 }
 
 export default new HospitalService();

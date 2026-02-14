@@ -7,15 +7,18 @@ import Sidebar from "./Sidebar"
 import TopBar from "./TopBar"
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isInitialized } = useAuth()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for auth to initialize before deciding to redirect
+    if (isInitialized && !isAuthenticated) {
       router.push("/login")
     }
   }, [isAuthenticated, router])
+
+  if (!isInitialized) return null
 
   if (!isAuthenticated) return null
 

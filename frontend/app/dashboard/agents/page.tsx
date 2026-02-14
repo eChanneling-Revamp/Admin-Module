@@ -8,7 +8,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, UserPlus, Edit, Trash2 } from "lucide-react"
-import { agentApi, type Agent, type AgentQueryParams } from "@/lib/api/agentApi"
+import { agentApi, type Agent, type AgentQueryParams, type CreateAgentData, type UpdateAgentData } from "@/lib/api/agentApi"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -65,6 +76,84 @@ export default function AgentsPage() {
       console.error("Error deleting agent:", error)
     }
   }
+  // Modal state & form data
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+
+  const [formData, setFormData] = useState<CreateAgentData>({
+    name: "",
+    email: "",
+    companyName: undefined,
+    phone: undefined,
+    address: undefined,
+  })
+
+  const [editFormData, setEditFormData] = useState<UpdateAgentData>({
+    name: "",
+    email: "",
+    companyName: undefined,
+    phone: undefined,
+    address: undefined,
+    isActive: true,
+  })
+
+  const resetForm = () => setFormData({ name: "", email: "", companyName: undefined, phone: undefined, address: undefined })
+  const resetEditForm = () => {
+    setEditFormData({ name: "", email: "", companyName: undefined, phone: undefined, address: undefined, isActive: true })
+    setSelectedAgent(null)
+  }
+
+  const handleAddAgent = async () => {
+    try {
+      await agentApi.create({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        companyName: formData.companyName?.trim() || undefined,
+        phone: formData.phone?.trim() || undefined,
+        address: formData.address?.trim() || undefined,
+      })
+      await fetchAgents({ page: 1 })
+      setIsAddDialogOpen(false)
+      resetForm()
+    } catch (err) {
+      console.error('Error creating agent:', err)
+      alert('Failed to create agent')
+    }
+  }
+
+  const openEditDialog = (agent: Agent) => {
+    setSelectedAgent(agent)
+    setEditFormData({
+      name: agent.name,
+      email: agent.email,
+      companyName: agent.companyName || undefined,
+      phone: agent.phone || undefined,
+      address: agent.address || undefined,
+      isActive: agent.isActive,
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditAgent = async () => {
+    if (!selectedAgent) return
+    try {
+      await agentApi.update(selectedAgent.id, {
+        name: editFormData.name?.trim() || undefined,
+        email: editFormData.email?.trim() || undefined,
+        companyName: editFormData.companyName?.trim() || undefined,
+        phone: editFormData.phone?.trim() || undefined,
+        address: editFormData.address?.trim() || undefined,
+        isActive: editFormData.isActive,
+      })
+      await fetchAgents()
+      setIsEditDialogOpen(false)
+      resetEditForm()
+    } catch (err) {
+      console.error('Error updating agent:', err)
+      alert('Failed to update agent')
+    }
+  }
 
   const stats = {
     total: pagination.total,
@@ -91,10 +180,33 @@ export default function AgentsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Agent Management</h1>
             <p className="text-gray-600 mt-1">Manage all agents and partnerships</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add New Agent
-          </Button>
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open)
+              if (open) resetForm()
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add New Agent
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Agent</DialogTitle>
+                <DialogDescription>Enter agent details</DialogDescription>
+              </DialogHeader>
+              <AgentForm formData={formData} setFormData={setFormData} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddAgent} className="bg-blue-600">
+                  Add Agent
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -192,13 +304,13 @@ export default function AgentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(agent)}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleDeleteAgent(agent.id)}
+                          //onClick={() => handleDeleteAgent(agent.id)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -247,6 +359,146 @@ export default function AgentsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) resetEditForm()
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Agent</DialogTitle>
+            <DialogDescription>Update agent details</DialogDescription>
+          </DialogHeader>
+          <EditAgentForm
+            formData={editFormData}
+            setFormData={setEditFormData}
+            selectedAgent={selectedAgent}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditAgent} className="bg-blue-600">
+              Update Agent
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </ProtectedLayout>
+  )
+}
+
+function AgentForm({
+  formData,
+  setFormData,
+}: {
+  formData: CreateAgentData
+  setFormData: React.Dispatch<React.SetStateAction<CreateAgentData>>
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Agent Name *</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="John Smith"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Email *</Label>
+        <Input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="agent@company.com"
+        />
+      </div>
+      <div>
+        <Label>Company</Label>
+        <Input
+          value={formData.companyName || ""}
+          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          placeholder="Company name (optional)"
+        />
+      </div>
+      <div>
+        <Label>Phone</Label>
+        <Input
+          value={formData.phone || ""}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          placeholder="Optional"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Address</Label>
+        <Input
+          value={formData.address || ""}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          placeholder="Optional"
+        />
+      </div>
+    </div>
+  )
+}
+
+function EditAgentForm({
+  formData,
+  setFormData,
+  selectedAgent,
+}: {
+  formData: UpdateAgentData
+  setFormData: React.Dispatch<React.SetStateAction<UpdateAgentData>>
+  selectedAgent: Agent | null
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-2">
+        <Label>Email</Label>
+        <Input type="email" value={selectedAgent?.email || ""} readOnly disabled />
+      </div>
+      <div className="col-span-2">
+        <Label>Agent Name</Label>
+        <Input
+          value={formData.name || ""}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="John Smith"
+        />
+      </div>
+      <div>
+        <Label>Company</Label>
+        <Input
+          value={formData.companyName || ""}
+          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          placeholder="Company name (optional)"
+        />
+      </div>
+      <div>
+        <Label>Phone</Label>
+        <Input
+          value={formData.phone || ""}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          placeholder="Optional"
+        />
+      </div>
+      <div className="col-span-2">
+        <Label>Address</Label>
+        <Input
+          value={formData.address || ""}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          placeholder="Optional"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={!!formData.isActive}
+          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+        />
+        <Label>Active Status</Label>
+      </div>
+    </div>
   )
 }

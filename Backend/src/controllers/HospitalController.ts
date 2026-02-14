@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { HospitalStatus } from '@prisma/client';
 import { HospitalService } from '../services/HospitalService';
 import { ResponseHelper } from '../utils/response';
 import { asyncHandler } from '../middlewares/error.middleware';
@@ -31,7 +30,7 @@ const updateHospitalSchema = z.object({
     website: z.string().url().optional(),
     facilities: z.array(z.string()).optional(),
     isActive: z.boolean().optional(),
-    status: z.nativeEnum(HospitalStatus).optional(),
+    status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
     profileImage: z.string().url().optional(),
   }),
 });
@@ -51,6 +50,24 @@ const hospitalQuerySchema = z.object({
 
 // Combined schemas for multi-part validation
 const updateHospitalRequestSchema = updateHospitalSchema.merge(hospitalParamsSchema);
+
+const updateHospitalStatusSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, 'Hospital ID is required'),
+  }),
+  body: z.object({
+    status: z.enum(['PENDING', 'APPROVED', 'REJECTED'])
+  })
+});
+
+const updateHospitalFacilitiesSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, 'Hospital ID is required'),
+  }),
+  body: z.object({
+    facilities: z.array(z.string().trim().min(1, 'Facility name is required')).default([])
+  })
+});
 
 export class HospitalController {
   private hospitalService = new HospitalService();
@@ -117,6 +134,25 @@ export class HospitalController {
     }
   });
 
+  updateHospitalStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+      const hospital = await this.hospitalService.updateHospitalStatus(id, status);
+
+      if (!hospital) {
+        ResponseHelper.notFound(res, 'Hospital not found');
+        return;
+      }
+
+      ResponseHelper.success(res, hospital, 'Hospital status updated successfully');
+    } catch (error) {
+      logger.error('Update hospital status error:', error);
+      ResponseHelper.badRequest(res, 'Failed to update hospital status');
+    }
+  });
+
   deleteHospital = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
@@ -156,6 +192,35 @@ export class HospitalController {
       ResponseHelper.badRequest(res, 'Failed to retrieve hospitals by city');
     }
   });
+
+  getHospitalGroups = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const groups = await this.hospitalService.getHospitalGroups();
+      ResponseHelper.success(res, groups, 'Hospital groups retrieved successfully');
+    } catch (error) {
+      logger.error('Get hospital groups error:', error);
+      ResponseHelper.badRequest(res, 'Failed to retrieve hospital groups');
+    }
+  });
+
+  updateHospitalFacilities = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { facilities } = req.body;
+
+    try {
+      const hospital = await this.hospitalService.updateHospitalFacilities(id, facilities);
+
+      if (!hospital) {
+        ResponseHelper.notFound(res, 'Hospital not found');
+        return;
+      }
+
+      ResponseHelper.success(res, hospital, 'Hospital facilities updated successfully');
+    } catch (error) {
+      logger.error('Update hospital facilities error:', error);
+      ResponseHelper.badRequest(res, 'Failed to update hospital facilities');
+    }
+  });
 }
 
 // Export validation schemas
@@ -165,4 +230,6 @@ export {
   updateHospitalRequestSchema,
   hospitalParamsSchema,
   hospitalQuerySchema,
+  updateHospitalStatusSchema,
+  updateHospitalFacilitiesSchema,
 };

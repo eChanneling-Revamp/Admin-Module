@@ -46,6 +46,13 @@ const doctorParamsSchema = z.object({
   }),
 });
 
+const updateDoctorStatusSchema = z.object({
+  params: doctorParamsSchema.shape.params,
+  body: z.object({
+    status: z.nativeEnum(DoctorStatus),
+  }),
+});
+
 export class DoctorController {
   private doctorService = new DoctorService();
 
@@ -148,6 +155,25 @@ export class DoctorController {
       ResponseHelper.badRequest(res, 'Failed to retrieve doctor stats');
     }
   });
+
+  updateDoctorStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+      const doctor = await this.doctorService.updateDoctorStatus(id, status);
+
+      if (!doctor) {
+        ResponseHelper.notFound(res, 'Doctor not found');
+        return;
+      }
+
+      ResponseHelper.success(res, doctor, 'Doctor status updated successfully');
+    } catch (error) {
+      logger.error('Update doctor status error:', error);
+      ResponseHelper.badRequest(res, 'Failed to update doctor status');
+    }
+  });
 }
 
 // Export validation schemas
@@ -155,4 +181,5 @@ export {
   createDoctorSchema,
   updateDoctorSchema,
   doctorParamsSchema,
+  updateDoctorStatusSchema,
 };

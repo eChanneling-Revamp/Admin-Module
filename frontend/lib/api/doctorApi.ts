@@ -117,6 +117,23 @@ export const doctorApi = {
     return response.json()
   },
 
+  patchStatus: async (id: string, status: string): Promise<Doctor> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to update doctor status')
+    }
+
+    return response.json()
+  },
+
   delete: async (id: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/api/doctors/${id}`, {
       method: 'DELETE',

@@ -108,6 +108,16 @@ export default function HospitalsPage() {
     }
   }
 
+  const handleUpdateStatus = async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+    try {
+      if (status === 'REJECTED' && !confirm('Are you sure you want to reject this hospital?')) return
+      await hospitalApi.updateStatus(id, status)
+      await fetchHospitals()
+    } catch (error) {
+      console.error('Error updating hospital status:', error)
+    }
+  }
+
   const openEditDialog = (hospital: Hospital) => {
     setSelectedHospital(hospital)
     setFormData({
@@ -259,9 +269,12 @@ export default function HospitalsPage() {
                     <TableCell className="text-sm">{hospital.city}</TableCell>
                     <TableCell className="text-sm text-gray-600">{hospital.contactNumber}</TableCell>
                     <TableCell>
-                      <Badge variant={hospital.isActive ? "default" : "secondary"}>
-                        {hospital.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={hospital.isActive ? "default" : "secondary"}>
+                          {hospital.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <span className="text-sm text-gray-600">{hospital.status}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2">
@@ -272,6 +285,22 @@ export default function HospitalsPage() {
                           onClick={() => handleDeleteHospital(hospital.id)}
                         >
                           <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateStatus(hospital.id, 'APPROVED')}
+                          disabled={hospital.status === 'APPROVED'}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleUpdateStatus(hospital.id, 'REJECTED')}
+                          disabled={hospital.status === 'REJECTED'}
+                        >
+                          Reject
                         </Button>
                       </div>
                     </TableCell>

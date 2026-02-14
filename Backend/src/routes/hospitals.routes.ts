@@ -4,7 +4,9 @@ import { HospitalController,
   updateHospitalSchema, 
   updateHospitalRequestSchema,
   hospitalParamsSchema,
-  hospitalQuerySchema 
+  hospitalQuerySchema,
+  updateHospitalStatusSchema,
+  updateHospitalFacilitiesSchema
 } from '../controllers/HospitalController';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticateToken, requireActiveUser } from '../middlewares/auth.middleware';
@@ -35,6 +37,11 @@ router.get('/stats',
   hospitalController.getHospitalStats
 );
 
+router.get('/groups', 
+  requirePermission({ resource: 'hospital', action: 'read' }),
+  hospitalController.getHospitalGroups
+);
+
 router.get('/by-city', 
   requirePermission({ resource: 'hospital', action: 'read' }),
   validate(hospitalQuerySchema), 
@@ -57,6 +64,18 @@ router.delete('/:id',
   requirePermission({ resource: 'hospital', action: 'delete' }),
   validate(hospitalParamsSchema), 
   hospitalController.deleteHospital
+);
+
+router.patch('/:id/status',
+  requirePermission({ resource: 'hospital', action: 'update' }),
+  validate(updateHospitalStatusSchema),
+  hospitalController.updateHospitalStatus
+);
+
+router.patch('/:id/facilities',
+  requirePermission({ resource: 'hospital', action: 'update' }),
+  validate(updateHospitalFacilitiesSchema),
+  hospitalController.updateHospitalFacilities
 );
 
 export default router;

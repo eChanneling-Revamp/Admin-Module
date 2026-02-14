@@ -36,6 +36,11 @@ router.get('/stats',
   hospitalController.getHospitalStats
 );
 
+router.get('/groups', 
+  requirePermission({ resource: 'hospital', action: 'read' }),
+  hospitalController.getHospitalGroups
+);
+
 router.get('/by-city', 
   requirePermission({ resource: 'hospital', action: 'read' }),
   validate(hospitalQuerySchema), 

@@ -3,6 +3,8 @@ if (!API_BASE_URL) {
   throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
 }
 
+export type HospitalStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
 export interface Hospital {
   id: string
   name: string
@@ -15,7 +17,7 @@ export interface Hospital {
   facilities: string[]
   isActive: boolean
   createdAt: string
-  status: string
+  status: HospitalStatus
   profileImage: string | null
 }
 
@@ -33,7 +35,32 @@ export interface CreateHospitalData {
 
 export interface UpdateHospitalData extends Partial<CreateHospitalData> {
   isActive?: boolean
-  status?: string
+  status?: HospitalStatus
+}
+
+export interface HospitalGroupHospital {
+  id: string
+  name: string
+  city: string
+  district: string
+  hospitalType: string
+  status: HospitalStatus
+  doctorCount: number
+  facilities: string[]
+  profileImage: string | null
+}
+
+export interface HospitalGroup {
+  id: string
+  hospitalType: string
+  totalHospitals: number
+  statusBreakdown: Record<HospitalStatus, number>
+  hospitals: HospitalGroupHospital[]
+  doctorCount: number
+  facilityCount: number
+  cities: string[]
+  districts: string[]
+  districtCount: number
 }
 
 export const hospitalApi = {
@@ -155,7 +182,7 @@ export const hospitalApi = {
     return response.json()
   },
 
-  updateStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<Hospital> => {
+  updateStatus: async (id: string, status: HospitalStatus): Promise<Hospital> => {
     const response = await fetch(`${API_BASE_URL}/api/hospitals/${id}/status`, {
       method: 'PATCH',
       headers: {
@@ -172,5 +199,22 @@ export const hospitalApi = {
     }
 
     return response.json()
+  },
+
+  getGroups: async (): Promise<HospitalGroup[]> => {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/api/hospitals/groups`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch hospital groups')
+    }
+
+    const data = await response.json()
+    return data.data || data
   },
 }

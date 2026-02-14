@@ -1,5 +1,37 @@
+import { hospital_status } from '@prisma/client';
 import { prisma } from '../config/database';
 import { logger } from '../config/logger';
+
+type HospitalGroupHospital = {
+  id: string;
+  name: string;
+  city: string;
+  district: string;
+  hospitalType: string;
+  status: hospital_status;
+  doctorCount: number;
+  facilities: string[];
+  profileImage: string | null;
+};
+
+export type HospitalGroupSummary = {
+  id: string;
+  hospitalType: string;
+  totalHospitals: number;
+  statusBreakdown: Record<hospital_status, number>;
+  hospitals: HospitalGroupHospital[];
+  doctorCount: number;
+  facilityCount: number;
+  cities: string[];
+  districts: string[];
+  districtCount: number;
+};
+
+const STATUS_TEMPLATE: Record<hospital_status, number> = {
+  APPROVED: 0,
+  PENDING: 0,
+  REJECTED: 0,
+};
 
 export class HospitalService {
   async getAllHospitals(): Promise<any[]> {
@@ -237,6 +269,103 @@ export class HospitalService {
     } catch (error) {
       logger.error('Error updating hospital status:', error);
       return null;
+    }
+  }
+
+  async getHospitalGroups(): Promise<HospitalGroupSummary[]> {
+    try {
+      const hospitals = await prisma.hospital.findMany({
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          district: true,
+          hospitalType: true,
+          status: true,
+          facilities: true,
+          profileImage: true,
+          _count: {
+            select: {
+              doctorHospitals: true,
+            },
+          },
+        },
+      });
+
+      type TypeAccumulator = {
+        data: HospitalGroupSummary;
+        citySet: Set<string>;
+        districtSet: Set<string>;
+        facilitySet: Set<string>;
+      };
+
+      const typeGroups = new Map<string, TypeAccumulator>();
+
+      hospitals.forEach((hospital) => {
+        const hospitalType = hospital.hospitalType?.trim() || 'Uncategorized';
+        const district = hospital.district?.trim() || 'Unknown District';
+        const city = hospital.city?.trim() || 'Unknown City';
+
+        if (!typeGroups.has(hospitalType)) {
+          typeGroups.set(hospitalType, {
+            data: {
+              id: hospitalType,
+              hospitalType,
+              totalHospitals: 0,
+              statusBreakdown: { ...STATUS_TEMPLATE },
+              hospitals: [],
+              doctorCount: 0,
+              facilityCount: 0,
+              cities: [],
+              districts: [],
+              districtCount: 0,
+            },
+            citySet: new Set<string>(),
+            districtSet: new Set<string>(),
+            facilitySet: new Set<string>(),
+          });
+        }
+
+        const typeGroup = typeGroups.get(hospitalType)!;
+        const { data, citySet, districtSet, facilitySet } = typeGroup;
+
+        data.totalHospitals += 1;
+        data.statusBreakdown[hospital.status] += 1;
+        data.doctorCount += hospital._count.doctorHospitals;
+        citySet.add(city);
+        districtSet.add(district);
+        hospital.facilities?.forEach((facility) => {
+          if (facility) {
+            facilitySet.add(facility);
+          }
+        });
+
+        data.hospitals.push({
+          id: hospital.id,
+          name: hospital.name,
+          city,
+          district,
+          hospitalType,
+          status: hospital.status,
+          doctorCount: hospital._count.doctorHospitals,
+          facilities: hospital.facilities || [],
+          profileImage: hospital.profileImage,
+        });
+      });
+
+      const formattedGroups = Array.from(typeGroups.values()).map(({ data, citySet, districtSet, facilitySet }) => ({
+        ...data,
+        cities: Array.from(citySet).sort(),
+        districts: Array.from(districtSet).sort(),
+        facilityCount: facilitySet.size,
+        districtCount: districtSet.size,
+        hospitals: data.hospitals.sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+
+      return formattedGroups.sort((a, b) => b.totalHospitals - a.totalHospitals);
+    } catch (error) {
+      logger.error('Error grouping hospitals:', error);
+      return [];
     }
   }
 }

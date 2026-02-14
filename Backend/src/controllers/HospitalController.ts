@@ -183,6 +183,16 @@ export class HospitalController {
       ResponseHelper.badRequest(res, 'Failed to retrieve hospitals by city');
     }
   });
+
+  getHospitalGroups = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const groups = await this.hospitalService.getHospitalGroups();
+      ResponseHelper.success(res, groups, 'Hospital groups retrieved successfully');
+    } catch (error) {
+      logger.error('Get hospital groups error:', error);
+      ResponseHelper.badRequest(res, 'Failed to retrieve hospital groups');
+    }
+  });
 }
 
 // Export validation schemas

@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { DoctorController, 
   createDoctorSchema, 
   updateDoctorSchema, 
-  doctorParamsSchema 
+  doctorParamsSchema,
+  updateDoctorStatusSchema
 } from '../controllers/DoctorController';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticateToken, requireActiveUser } from '../middlewares/auth.middleware';
@@ -37,6 +38,12 @@ router.get('/:id',
   requirePermission({ resource: 'doctor', action: 'read' }),
   validate(doctorParamsSchema), 
   doctorController.getDoctorById
+);
+
+router.patch('/:id/status',
+  requirePermission({ resource: 'doctor', action: 'update' }),
+  validate(updateDoctorStatusSchema),
+  doctorController.updateDoctorStatus
 );
 
 router.put('/:id', 

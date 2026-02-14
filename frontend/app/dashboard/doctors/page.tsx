@@ -49,6 +49,7 @@ export default function DoctorsPage() {
     description: "",
     isActive: true,
   })
+  const [updatingDoctorId, setUpdatingDoctorId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDoctors()
@@ -74,6 +75,19 @@ export default function DoctorsPage() {
       await fetchDoctors()
     } catch (error) {
       console.error("Error deleting doctor:", error)
+    }
+  }
+
+  const handleUpdateDoctorStatus = async (id: string, status: string) => {
+    if (!confirm(`Are you sure you want to set status to ${status}?`)) return
+    try {
+      setUpdatingDoctorId(id)
+      await doctorApi.patchStatus(id, status)
+      await fetchDoctors()
+    } catch (error) {
+      console.error('Error updating doctor status:', error)
+    } finally {
+      setUpdatingDoctorId(null)
     }
   }
 
@@ -286,23 +300,45 @@ export default function DoctorsPage() {
                     <TableCell className="text-sm text-gray-600">{doctor.email}</TableCell>
                     <TableCell className="text-sm">{doctor.experience} years</TableCell>
                     <TableCell className="text-sm text-gray-600">{doctor.phoneNumber}</TableCell>
-                    <TableCell>
-                      <Badge variant={doctor.isActive ? "default" : "secondary"}>
-                        {doctor.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(doctor)}>Edit</Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDeleteDoctor(doctor.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge className="uppercase text-xs">
+                            {doctor.status}
+                          </Badge>
+                          {doctor.status !== 'APPROVED' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleUpdateDoctorStatus(doctor.id, 'APPROVED')}
+                              disabled={updatingDoctorId === doctor.id}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          {doctor.status !== 'REJECTED' && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleUpdateDoctorStatus(doctor.id, 'REJECTED')}
+                              disabled={updatingDoctorId === doctor.id}
+                            >
+                              Reject
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(doctor)}>Edit</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteDoctor(doctor.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

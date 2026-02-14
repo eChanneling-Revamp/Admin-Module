@@ -174,6 +174,41 @@ export class DoctorService {
     }
   }
 
+  async updateDoctorStatus(id: string, status: string): Promise<any | null> {
+    try {
+      const doctor = await prisma.doctor.update({
+        where: { id },
+        data: { status },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          specialization: true,
+          qualification: true,
+          experience: true,
+          phonenumber: true,
+          consultationFee: true,
+          rating: true,
+          profileImage: true,
+          description: true,
+          languages: true,
+          availableDays: true,
+          isActive: true,
+          createdAt: true,
+          status: true
+        }
+      });
+
+      return {
+        ...doctor,
+        phoneNumber: doctor.phonenumber
+      };
+    } catch (error) {
+      logger.error('Error updating doctor status:', error);
+      return null;
+    }
+  }
+
   async deleteDoctor(id: string): Promise<boolean> {
     try {
       await prisma.doctor.delete({

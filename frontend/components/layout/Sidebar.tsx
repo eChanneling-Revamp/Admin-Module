@@ -2,8 +2,9 @@
 
 import type React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -174,6 +175,20 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>([])
 
+  // Auto-expand parent menu if current pathname matches any child href
+  useEffect(() => {
+    const matchedParents: string[] = []
+    menuItems.forEach((item) => {
+      if (item.children) {
+        const match = item.children.some((c) => pathname?.includes(c.href || ""))
+        if (match) matchedParents.push(item.title)
+      }
+    })
+    if (matchedParents.length > 0) {
+      setExpandedItems((prev) => Array.from(new Set([...prev, ...matchedParents])))
+    }
+  }, [pathname])
+
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) =>
       prev.includes(title)
@@ -185,6 +200,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === href
     return pathname.includes(href)
+  }
+
+  const router = useRouter()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    // close sidebar on small screens
+    if (sidebarOpen) setSidebarOpen(false)
+    router.push('/login')
   }
 
   return (
@@ -239,7 +264,10 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                           <li key={child.href}>
                             <Link
                               href={child.href}
-                              onClick={() => setSidebarOpen(false)}
+                              onClick={() => {
+                                // Only close sidebar on small screens (when it was open)
+                                if (sidebarOpen) setSidebarOpen(false)
+                              }}
                               className={cn(
                                 "block px-3 py-2 rounded-md text-sm hover:bg-cyan-600/40",
                                 isActive(child.href) &&
@@ -256,7 +284,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 ) : (
                   <Link
                     href={item.href!}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => {
+                      if (sidebarOpen) setSidebarOpen(false)
+                    }}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-cyan-600/40 transition",
                       isActive(item.href!) &&
@@ -273,8 +303,22 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-cyan-600/50 text-center text-xs text-cyan-200">
-          © 2025 eChannelling
+        <div className="p-4 border-t border-cyan-600/50 text-xs text-cyan-200 flex items-center justify-between gap-3">
+          <div className="flex-1">
+            <div className="text-sm">© 2025 eChannelling</div>
+            <div className="text-xs text-cyan-200/80">Admin Portal</div>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-md"
+            aria-label="Logout"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="text-sm font-medium">Logout</span>
+          </button>
         </div>
       </aside>
     </>

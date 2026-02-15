@@ -66,7 +66,7 @@ const menuItems: MenuItem[] = [
     icon: <Stethoscope className="w-5 h-5" />,
     children: [
       { title: "All Doctors", href: "/dashboard/doctors" },
-      { title: "Specializations", href: "/dashboard/specializations" },
+      // { title: "Specializations", href: "/dashboard/specializations" },
       { title: "Doctor Schedules", href: "/dashboard/doctor-schedules" },
       { title: "Hospital Assignments", href: "/dashboard/doctor-hospitals" },
     ],

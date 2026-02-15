@@ -3,7 +3,8 @@ import { DoctorController,
   createDoctorSchema, 
   updateDoctorSchema, 
   doctorParamsSchema,
-  updateDoctorStatusSchema
+  updateDoctorStatusSchema,
+  doctorScheduleQuerySchema
 } from '../controllers/DoctorController';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticateToken, requireActiveUser } from '../middlewares/auth.middleware';
@@ -32,6 +33,12 @@ router.get('/',
 router.get('/stats', 
   requirePermission({ resource: 'doctor', action: 'read' }),
   doctorController.getDoctorStats
+);
+
+router.get('/schedules',
+  requirePermission({ resource: 'doctor', action: 'read' }),
+  validate(doctorScheduleQuerySchema),
+  doctorController.getDoctorSchedules
 );
 
 router.get('/:id', 

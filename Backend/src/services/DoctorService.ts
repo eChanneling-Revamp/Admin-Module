@@ -253,7 +253,7 @@ export class DoctorService {
     try {
       const doctor = await prisma.doctor.update({
         where: { id },
-        data: { status },
+        data: { status: status as any },
         select: {
           id: true,
           name: true,

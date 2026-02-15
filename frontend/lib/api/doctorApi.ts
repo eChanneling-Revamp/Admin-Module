@@ -22,6 +22,35 @@ export interface Doctor {
   status: string
 }
 
+export interface HospitalSummary {
+  id: string
+  name: string
+  city: string
+  district: string
+  isActive: boolean
+}
+
+export interface DoctorHospitalAssignment {
+  doctorId: string
+  doctorName: string
+  specialization: string
+  status: string
+  primaryHospital?: HospitalSummary
+  additionalHospitals: HospitalSummary[]
+  weeklySessions: number
+  totalHospitals: number
+}
+
+export interface DoctorHospitalAssignmentResponse {
+  assignments: DoctorHospitalAssignment[]
+  stats: {
+    totalAssignments: number
+    multiHospitalDoctors: number
+    activeHospitals: number
+    weeklySessions: number
+  }
+}
+
 export interface CreateDoctorData {
   name: string
   email: string
@@ -228,5 +257,21 @@ export const doctorApi = {
     }
 
     return response.json()
+  },
+
+  getHospitalAssignments: async (): Promise<DoctorHospitalAssignmentResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/assignments`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch doctor hospital assignments')
+    }
+
+    const data = await response.json()
+    return data.data || data
   },
 }

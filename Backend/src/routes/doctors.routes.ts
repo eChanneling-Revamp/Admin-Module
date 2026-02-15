@@ -35,6 +35,11 @@ router.get('/stats',
   doctorController.getDoctorStats
 );
 
+router.get('/assignments',
+  requirePermission({ resource: 'doctor', action: 'read' }),
+  doctorController.getDoctorHospitalAssignments
+);
+
 router.get('/schedules',
   requirePermission({ resource: 'doctor', action: 'read' }),
   validate(doctorScheduleQuerySchema),

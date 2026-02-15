@@ -179,6 +179,16 @@ export class DoctorController {
     }
   });
 
+  getDoctorHospitalAssignments = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const assignments = await this.doctorService.getDoctorHospitalAssignments();
+      ResponseHelper.success(res, assignments, 'Doctor hospital assignments retrieved successfully');
+    } catch (error) {
+      logger.error('Get doctor hospital assignments error:', error);
+      ResponseHelper.badRequest(res, 'Failed to retrieve doctor hospital assignments');
+    }
+  });
+
   updateDoctorStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { status } = req.body;

@@ -44,6 +44,37 @@ type DoctorScheduleList = {
   };
 };
 
+type HospitalSummary = {
+  id: string;
+  name: string;
+  city: string;
+  district: string;
+  isActive: boolean;
+};
+
+type DoctorHospitalAssignment = {
+  doctorId: string;
+  doctorName: string;
+  specialization: string;
+  status: string;
+  primaryHospital?: HospitalSummary;
+  additionalHospitals: HospitalSummary[];
+  weeklySessions: number;
+  totalHospitals: number;
+};
+
+type DoctorHospitalAssignmentStats = {
+  totalAssignments: number;
+  multiHospitalDoctors: number;
+  activeHospitals: number;
+  weeklySessions: number;
+};
+
+type DoctorHospitalAssignmentResponse = {
+  assignments: DoctorHospitalAssignment[];
+  stats: DoctorHospitalAssignmentStats;
+};
+
 export class DoctorService {
   async getAllDoctors(): Promise<any[]> {
     try {
@@ -285,6 +316,121 @@ export class DoctorService {
     } catch (error) {
       logger.error('Error fetching doctor stats:', error);
       return { total: 0, active: 0, inactive: 0, approved: 0, pending: 0 };
+    }
+  }
+
+  async getDoctorHospitalAssignments(): Promise<DoctorHospitalAssignmentResponse> {
+    try {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(now.getDate() - 7);
+
+      const [doctors, activeAssignmentCount, activeHospitalIds, weeklySessionGroups] = await Promise.all([
+        prisma.doctor.findMany({
+          where: {
+            doctorHospitals: {
+              some: {
+                isActive: true,
+              },
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            status: true,
+            doctorHospitals: {
+              where: { isActive: true },
+              orderBy: { assignedAt: 'asc' },
+              select: {
+                hospital: {
+                  select: {
+                    id: true,
+                    name: true,
+                    city: true,
+                    district: true,
+                    isActive: true,
+                  },
+                },
+              },
+            },
+          },
+        }),
+        prisma.doctorHospital.count({ where: { isActive: true } }),
+        prisma.doctorHospital.findMany({
+          where: { isActive: true },
+          select: { hospitalId: true },
+        }),
+        prisma.session.groupBy({
+          by: ['doctorId'],
+          where: {
+            scheduledAt: {
+              gte: sevenDaysAgo,
+              lte: now,
+            },
+          },
+          _count: {
+            _all: true,
+          },
+        }),
+      ]);
+
+      const weeklySessionMap = new Map<string, number>();
+      let totalWeeklySessions = 0;
+
+      weeklySessionGroups.forEach((group) => {
+        const count = group._count?._all ?? 0;
+        weeklySessionMap.set(group.doctorId, count);
+        totalWeeklySessions += count;
+      });
+
+      const assignments: DoctorHospitalAssignment[] = doctors.map((doctor) => {
+        const hospitals: HospitalSummary[] = doctor.doctorHospitals
+          .map((assignment) => ({
+            id: assignment.hospital.id,
+            name: assignment.hospital.name,
+            city: assignment.hospital.city,
+            district: assignment.hospital.district,
+            isActive: assignment.hospital.isActive,
+          }));
+
+        const [primaryHospital, ...additionalHospitals] = hospitals;
+
+        return {
+          doctorId: doctor.id,
+          doctorName: doctor.name,
+          specialization: doctor.specialization,
+          status: doctor.status,
+          primaryHospital,
+          additionalHospitals,
+          weeklySessions: weeklySessionMap.get(doctor.id) ?? 0,
+          totalHospitals: hospitals.length,
+        };
+      });
+
+      const multiHospitalDoctors = assignments.filter((assignment) => assignment.totalHospitals > 1).length;
+      const activeHospitals = new Set(activeHospitalIds.map((record) => record.hospitalId)).size;
+
+      return {
+        assignments: assignments.sort((a, b) => a.doctorName.localeCompare(b.doctorName)),
+        stats: {
+          totalAssignments: activeAssignmentCount,
+          multiHospitalDoctors,
+          activeHospitals,
+          weeklySessions: totalWeeklySessions,
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching doctor-hospital assignments:', error);
+      return {
+        assignments: [],
+        stats: {
+          totalAssignments: 0,
+          multiHospitalDoctors: 0,
+          activeHospitals: 0,
+          weeklySessions: 0,
+        },
+      };
     }
   }
 

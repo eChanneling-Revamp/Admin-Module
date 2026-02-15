@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { doctor_status as DoctorStatus } from '@prisma/client';
+import { doctor_status as DoctorStatus, sessionstatus as SessionStatus } from '@prisma/client';
 import { DoctorService } from '../services/DoctorService';
 import { ResponseHelper } from '../utils/response';
 import { asyncHandler } from '../middlewares/error.middleware';
@@ -52,6 +52,29 @@ const updateDoctorStatusSchema = z.object({
     status: z.nativeEnum(DoctorStatus),
   }),
 });
+
+const doctorScheduleQuerySchema = z.object({
+  query: z.object({
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    doctorId: z.string().optional(),
+    hospitalId: z.string().optional(),
+    status: z.nativeEnum(SessionStatus).optional(),
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(200).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
+    search: z.string().optional(),
+  }),
+});
+
+const parseDateParam = (value: unknown): Date | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
 
 export class DoctorController {
   private doctorService = new DoctorService();
@@ -156,6 +179,16 @@ export class DoctorController {
     }
   });
 
+  getDoctorHospitalAssignments = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const assignments = await this.doctorService.getDoctorHospitalAssignments();
+      ResponseHelper.success(res, assignments, 'Doctor hospital assignments retrieved successfully');
+    } catch (error) {
+      logger.error('Get doctor hospital assignments error:', error);
+      ResponseHelper.badRequest(res, 'Failed to retrieve doctor hospital assignments');
+    }
+  });
+
   updateDoctorStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { status } = req.body;
@@ -174,6 +207,29 @@ export class DoctorController {
       ResponseHelper.badRequest(res, 'Failed to update doctor status');
     }
   });
+
+  getDoctorSchedules = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query } = doctorScheduleQuerySchema.parse({ query: req.query });
+
+      const schedules = await this.doctorService.getDoctorSchedules({
+        startDate: parseDateParam(query.startDate),
+        endDate: parseDateParam(query.endDate),
+        doctorId: query.doctorId,
+        hospitalId: query.hospitalId,
+        status: query.status,
+        page: query.page,
+        pageSize: query.pageSize,
+        sortOrder: query.sortOrder,
+        search: query.search,
+      });
+
+      ResponseHelper.success(res, schedules, 'Doctor schedules retrieved successfully');
+    } catch (error) {
+      logger.error('Get doctor schedules error:', error);
+      ResponseHelper.badRequest(res, 'Failed to retrieve doctor schedules');
+    }
+  });
 }
 
 // Export validation schemas
@@ -182,4 +238,5 @@ export {
   updateDoctorSchema,
   doctorParamsSchema,
   updateDoctorStatusSchema,
+  doctorScheduleQuerySchema,
 };

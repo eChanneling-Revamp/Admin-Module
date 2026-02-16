@@ -175,38 +175,40 @@ export default function AgentsPage() {
   return (
     <ProtectedLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Agent Management</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Agent Management</h1>
             <p className="text-gray-600 mt-1">Manage all agents and partnerships</p>
           </div>
-          <Dialog
-            open={isAddDialogOpen}
-            onOpenChange={(open) => {
-              setIsAddDialogOpen(open)
-              if (open) resetForm()
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add New Agent
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Agent</DialogTitle>
-                <DialogDescription>Enter agent details</DialogDescription>
-              </DialogHeader>
-              <AgentForm formData={formData} setFormData={setFormData} />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddAgent} className="bg-blue-600">
-                  Add Agent
+          <div className="mt-4 md:mt-0 text-left">
+            <Dialog
+              open={isAddDialogOpen}
+              onOpenChange={(open) => {
+                setIsAddDialogOpen(open)
+                if (open) resetForm()
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add New Agent
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Agent</DialogTitle>
+                  <DialogDescription>Enter agent details</DialogDescription>
+                </DialogHeader>
+                <AgentForm formData={formData} setFormData={setFormData} />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleAddAgent} className="bg-blue-600">
+                    Add Agent
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -254,12 +256,12 @@ export default function AgentsPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div className="text-left">
                 <CardTitle>All Agents</CardTitle>
                 <CardDescription>Active agents and booking statistics</CardDescription>
               </div>
-              <div className="relative w-64">
+              <div className="relative w-full md:w-64 mt-4 md:mt-0 text-left">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input 
                   placeholder="Search agents..." 

@@ -68,15 +68,15 @@ export default function DoctorHospitalsPage() {
   return (
     <ProtectedLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Hospital Assignments</h1>
             <p className="text-gray-600 mt-1">Manage doctor-hospital relationships and sessions</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700 w-fit">
             <Link2 className="w-4 h-4 mr-2" />
             Assign Doctor
-          </Button>
+            </Button>
         </div>
 
         {error && (

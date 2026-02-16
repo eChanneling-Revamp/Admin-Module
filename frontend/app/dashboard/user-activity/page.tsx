@@ -122,12 +122,12 @@ export default function UserActivityPage() {
   return (
     <ProtectedLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Activity Logs</h1>
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">User Activity Logs</h1>
             <p className="text-gray-600 mt-1">Monitor user actions and system activities (live from users table)</p>
           </div>
-          <div className="flex gap-2">
+            <div className="flex flex-row gap-2 mt-4 md:mt-0">
             <Button variant="outline" onClick={() => setLive(!live)}>
               {live ? 'Live: ON' : 'Live: OFF'}
             </Button>
@@ -139,7 +139,7 @@ export default function UserActivityPage() {
               <Download className="w-4 h-4 mr-2" />
               Export Logs
             </Button>
-          </div>
+            </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -183,14 +183,14 @@ export default function UserActivityPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div>
-                <CardTitle>Recent Activities</CardTitle>
-                <CardDescription>Real-time user activity monitoring</CardDescription>
+              <CardTitle>Recent Activities</CardTitle>
+              <CardDescription>Real-time user activity monitoring</CardDescription>
               </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input placeholder="Search logs..." className="pl-10" />
+              <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input placeholder="Search logs..." className="pl-10" />
               </div>
             </div>
           </CardHeader>

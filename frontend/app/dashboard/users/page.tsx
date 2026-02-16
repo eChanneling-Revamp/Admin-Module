@@ -249,19 +249,19 @@ export default function UsersPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>Total {stats.total} users in the system</CardDescription>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>Total {stats.total} users in the system</CardDescription>
               </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
+              <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input 
+                placeholder="Search users..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
               </div>
             </div>
           </CardHeader>

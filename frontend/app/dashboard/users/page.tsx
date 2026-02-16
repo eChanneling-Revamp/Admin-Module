@@ -190,7 +190,7 @@ export default function UsersPage() {
   return (
     <ProtectedLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-1">Manage all system users and their permissions</p>
@@ -200,27 +200,27 @@ export default function UsersPage() {
             onOpenChange={(open) => {
               setIsAddDialogOpen(open)
               if (open) {
-                resetForm()
+          resetForm()
               }
             }}
           >
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add New User
+              <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Add New User
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>Enter user details to add to the system</DialogDescription>
+          <DialogTitle>Add New User</DialogTitle>
+          <DialogDescription>Enter user details to add to the system</DialogDescription>
               </DialogHeader>
               <UserForm formData={formData} setFormData={setFormData} roleOptions={roleOptions} />
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddUser} className="bg-blue-600">
-                  Add User
-                </Button>
+          <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleAddUser} className="bg-blue-600">
+            Add User
+          </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

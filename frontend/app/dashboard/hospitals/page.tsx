@@ -176,38 +176,40 @@ export default function HospitalsPage() {
   return (
     <ProtectedLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Hospital Management</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Hospital Management</h1>
             <p className="text-gray-600 mt-1">Manage hospitals, facilities, and assignments</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Hospital
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Hospital</DialogTitle>
-                <DialogDescription>Enter hospital details to add to the system</DialogDescription>
-              </DialogHeader>
-              <HospitalForm
-                formData={formData}
-                setFormData={setFormData}
-                facilitiesText={facilitiesText}
-                onFacilitiesChange={handleFacilitiesChange}
-              />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddHospital} className="bg-blue-600">
-                  Add Hospital
+          <div className="mt-4 md:mt-0 text-left">
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Hospital
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-        </Dialog>
-      </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Hospital</DialogTitle>
+                  <DialogDescription>Enter hospital details to add to the system</DialogDescription>
+                </DialogHeader>
+                <HospitalForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  facilitiesText={facilitiesText}
+                  onFacilitiesChange={handleFacilitiesChange}
+                />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleAddHospital} className="bg-blue-600">
+                    Add Hospital
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
@@ -233,12 +235,12 @@ export default function HospitalsPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div className="text-left">
                 <CardTitle>All Hospitals</CardTitle>
                 <CardDescription>Registered medical facilities on the platform</CardDescription>
               </div>
-              <div className="relative w-64">
+              <div className="relative w-full md:w-64 mt-4 md:mt-0 text-left">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input 
                   placeholder="Search hospitals..." 

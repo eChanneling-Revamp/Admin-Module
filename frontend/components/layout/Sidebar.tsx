@@ -40,7 +40,7 @@ const menuItems: MenuItem[] = [
     title: "Dashboard",
     icon: <LayoutDashboard className="w-5 h-5" />,
     href: "/dashboard",
-    badge: "New",
+    // badge: "New",
   },
   {
     title: "User Management",
@@ -75,21 +75,21 @@ const menuItems: MenuItem[] = [
     icon: <Briefcase className="w-5 h-5" />,
     children: [
       { title: "All Agents", href: "/dashboard/agents" },
-      { title: "Corporate Agents", href: "/dashboard/agents/corporate" },
-      { title: "Telco Agents", href: "/dashboard/agents/telco" },
-      { title: "Individual Agents", href: "/dashboard/agents/individual" },
-      { title: "Commission Settings", href: "/dashboard/commissions" },
+      // { title: "Corporate Agents", href: "/dashboard/agents/corporate" },
+      // { title: "Telco Agents", href: "/dashboard/agents/telco" },
+      // { title: "Individual Agents", href: "/dashboard/agents/individual" },
+      // { title: "Commission Settings", href: "/dashboard/commissions" },
     ],
   },
-  {
-    title: "Branch Management",
-    icon: <Building2 className="w-5 h-5" />,
-    children: [
-      { title: "All Branches", href: "/dashboard/branches" },
-      { title: "Sub-Units", href: "/dashboard/sub-units" },
-      { title: "Branch Performance", href: "/dashboard/branch-performance" },
-    ],
-  },
+  // {
+  //   title: "Branch Management",
+  //   icon: <Building2 className="w-5 h-5" />,
+  //   children: [
+  //     { title: "All Branches", href: "/dashboard/branches" },
+  //     { title: "Sub-Units", href: "/dashboard/sub-units" },
+  //     { title: "Branch Performance", href: "/dashboard/branch-performance" },
+  //   ],
+  // },
   {
     title: "Fee & Discounts",
     icon: <Tags className="w-5 h-5" />,
@@ -97,53 +97,53 @@ const menuItems: MenuItem[] = [
       { title: "Hospital Fees", href: "/dashboard/hospital-fees" },
       { title: "Platform Fees", href: "/dashboard/platform-fees" },
       { title: "Discount Codes", href: "/dashboard/discounts" },
-      { title: "Bulk Fee Updates", href: "/dashboard/bulk-fees" },
+      // { title: "Bulk Fee Updates", href: "/dashboard/bulk-fees" },
     ],
   },
-  {
-    title: "Corporate Accounts",
-    icon: <Building className="w-5 h-5" />,
-    children: [
-      { title: "All Accounts", href: "/dashboard/corporate-accounts" },
-      { title: "Employees", href: "/dashboard/corporate-employees" },
-      { title: "Dependents", href: "/dashboard/dependents" },
-      { title: "Credit Management", href: "/dashboard/credit-management" },
-    ],
-  },
-  {
-    title: "Payments",
-    icon: <CreditCard className="w-5 h-5" />,
-    badge: "3",
-    children: [
-      { title: "All Transactions", href: "/dashboard/payments" },
-      { title: "Reconciliation", href: "/dashboard/reconciliation" },
-      { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
-      { title: "Refunds", href: "/dashboard/refunds" },
-    ],
-  },
+  // {
+  //   title: "Corporate Accounts",
+  //   icon: <Building className="w-5 h-5" />,
+  //   children: [
+  //     { title: "All Accounts", href: "/dashboard/corporate-accounts" },
+  //     { title: "Employees", href: "/dashboard/corporate-employees" },
+  //     { title: "Dependents", href: "/dashboard/dependents" },
+  //     { title: "Credit Management", href: "/dashboard/credit-management" },
+  //   ],
+  // },
+  // {
+  //   title: "Payments",
+  //   icon: <CreditCard className="w-5 h-5" />,
+  //   badge: "3",
+  //   children: [
+  //     { title: "All Transactions", href: "/dashboard/payments" },
+  //     { title: "Reconciliation", href: "/dashboard/reconciliation" },
+  //     { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
+  //     { title: "Refunds", href: "/dashboard/refunds" },
+  //   ],
+  // },
   {
     title: "Reports",
     icon: <BarChart3 className="w-5 h-5" />,
     children: [
       { title: "Financial Reports", href: "/dashboard/reports/financial" },
-      { title: "Registration Reports", href: "/dashboard/reports/registration" },
-      { title: "Doctor Performance", href: "/dashboard/reports/doctors" },
-      { title: "Hospital Analytics", href: "/dashboard/reports/hospitals" },
-      { title: "Agent Performance", href: "/dashboard/reports/agents" },
-      { title: "Custom Reports", href: "/dashboard/reports/custom" },
+      // { title: "Registration Reports", href: "/dashboard/reports/registration" },
+      // { title: "Doctor Performance", href: "/dashboard/reports/doctors" },
+      // { title: "Hospital Analytics", href: "/dashboard/reports/hospitals" },
+      // { title: "Agent Performance", href: "/dashboard/reports/agents" },
+      // { title: "Custom Reports", href: "/dashboard/reports/custom" },
     ],
   },
-  {
-    title: "Integrations",
-    icon: <Plug className="w-5 h-5" />,
-    children: [
-      { title: "Hospital APIs", href: "/dashboard/integrations/hospitals" },
-      { title: "Payment Gateways", href: "/dashboard/integrations/payments" },
-      { title: "SMS Providers", href: "/dashboard/integrations/sms" },
-      { title: "Email Services", href: "/dashboard/integrations/email" },
-      { title: "API Keys", href: "/dashboard/integrations/api-keys" },
-    ],
-  },
+  // {
+  //   title: "Integrations",
+  //   icon: <Plug className="w-5 h-5" />,
+  //   children: [
+  //     { title: "Hospital APIs", href: "/dashboard/integrations/hospitals" },
+  //     { title: "Payment Gateways", href: "/dashboard/integrations/payments" },
+  //     { title: "SMS Providers", href: "/dashboard/integrations/sms" },
+  //     { title: "Email Services", href: "/dashboard/integrations/email" },
+  //     { title: "API Keys", href: "/dashboard/integrations/api-keys" },
+  //   ],
+  // },
   {
     title: "Audit Logs",
     icon: <Shield className="w-5 h-5" />,
@@ -154,19 +154,19 @@ const menuItems: MenuItem[] = [
       { title: "Security Events", href: "/dashboard/audit-logs/security" },
     ],
   },
-  {
-    title: "Invoices",
-    icon: <FileText className="w-5 h-5" />,
-    href: "/dashboard/invoices",
-  },
+  // {
+  //   title: "Invoices",
+  //   icon: <FileText className="w-5 h-5" />,
+  //   href: "/dashboard/invoices",
+  // },
   {
     title: "Settings",
     icon: <Settings className="w-5 h-5" />,
     children: [
       { title: "General Settings", href: "/dashboard/settings" },
-      { title: "Email Templates", href: "/dashboard/settings/email-templates" },
-      { title: "SMS Templates", href: "/dashboard/settings/sms-templates" },
-      { title: "System Configuration", href: "/dashboard/settings/system" },
+      // { title: "Email Templates", href: "/dashboard/settings/email-templates" },
+      // { title: "SMS Templates", href: "/dashboard/settings/sms-templates" },
+      // { title: "System Configuration", href: "/dashboard/settings/system" },
     ],
   },
 ]
@@ -197,10 +197,10 @@ export function Sidebar() {
 
   const filteredItems = searchQuery
     ? menuItems.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.children?.some((child) => child.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.children?.some((child) => child.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
     : menuItems
 
   return (
@@ -209,10 +209,10 @@ export function Sidebar() {
       <div className="p-5 border-b border-emerald-100">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-100 overflow-hidden">
-            <Image 
-              src="/Logo.png" 
-              alt="eChannelling Logo" 
-              width={40} 
+            <Image
+              src="/Logo.png"
+              alt="eChannelling Logo"
+              width={40}
               height={40}
               className="object-contain"
             />

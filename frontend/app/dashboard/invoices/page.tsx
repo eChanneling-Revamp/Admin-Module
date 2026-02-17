@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -95,16 +94,16 @@ export default function InvoicesPage() {
 
   if (loading) {
     return (
-      <ProtectedLayout>
+      <div className="p-6">
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
         </div>
-      </ProtectedLayout>
+      </div>
     )
   }
 
   return (
-    <ProtectedLayout>
+    <div className="p-6">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -197,6 +196,6 @@ export default function InvoicesPage() {
           </div>
         </CardContent>
       </Card>
-    </ProtectedLayout>
+    </div>
   )
 }

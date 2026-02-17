@@ -118,7 +118,7 @@ export const doctorApi = {
     console.log('Doctor API: Fetching all doctors');
     const token = localStorage.getItem('auth_token');
     console.log('Doctor API: Token exists:', !!token);
-    
+
     const response = await fetch(`${API_BASE_URL}/api/doctors`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -127,7 +127,7 @@ export const doctorApi = {
     })
 
     console.log('Doctor API: Response status:', response.status);
-    
+
     if (!response.ok) {
       console.error('Doctor API: Failed response:', response.statusText);
       throw new Error('Failed to fetch doctors')
@@ -192,10 +192,10 @@ export const doctorApi = {
     const token = localStorage.getItem('auth_token');
     const queryString = params
       ? `?${new URLSearchParams(
-          Object.entries(params)
-            .filter(([, value]) => value !== undefined && value !== null && value !== '')
-            .map(([key, value]) => [key, String(value)])
-        )}`
+        Object.entries(params)
+          .filter(([, value]) => value !== undefined && value !== null && value !== '')
+          .map(([key, value]) => [key, String(value)])
+      )}`
       : '';
 
     const response = await fetch(`${API_BASE_URL}/api/doctors/schedules${queryString}`, {
@@ -211,6 +211,70 @@ export const doctorApi = {
 
     const data = await response.json();
     return data.data || data;
+  },
+
+  createSchedule: async (data: any): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/schedules`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to create schedule")
+    }
+    return response.json()
+  },
+
+  updateSchedule: async (id: string, data: any): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/schedules/${id}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to update schedule")
+    }
+    return response.json()
+  },
+
+  assignHospital: async (data: { doctorId: string; hospitalId: string; }): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/assignments`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to assign hospital")
+    }
+    return response.json()
+  },
+
+  removeHospital: async (doctorId: string, hospitalId: string): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/api/doctors/assignments`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ doctorId, hospitalId }),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to remove hospital assignment")
+    }
+    return response.json()
   },
 
   patchStatus: async (id: string, status: string): Promise<Doctor> => {
@@ -259,7 +323,7 @@ export const doctorApi = {
     return response.json()
   },
 
-  getHospitalAssignments: async (): Promise<DoctorHospitalAssignmentResponse> => {
+  getDoctorHospitalAssignments: async (): Promise<DoctorHospitalAssignmentResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/doctors/assignments`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,

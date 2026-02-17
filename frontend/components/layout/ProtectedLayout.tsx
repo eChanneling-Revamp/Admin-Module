@@ -1,36 +1,41 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import type React from "react"
+
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
-import Sidebar from "./Sidebar"
-import TopBar from "./TopBar"
+import { Sidebar } from "./Sidebar"
+import { TopBar } from "./TopBar"
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    // Wait for auth to initialize before deciding to redirect
-    if (isInitialized && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/login")
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, isLoading, router])
 
-  if (!isInitialized) return null
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
-  if (!isAuthenticated) return null
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
-      {/* Main Content */}
-      <div className="md:ml-64">
-        <TopBar setSidebarOpen={setSidebarOpen}/>
-        <main className="pt-16 p-3 md:p-6 md:mt-10 lg:mt-10">{children}</main>
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="ml-72">
+        <TopBar />
+        <main className="pt-16 min-h-[calc(100vh-64px)]">{children}</main>
       </div>
     </div>
   )

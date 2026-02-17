@@ -1,27 +1,22 @@
 import type { Branch, CreateBranchDto, UpdateBranchDto } from "@/types/branch"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
-if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-}
-
-const BRANCH_API_BASE = `${API_BASE_URL}/api/branches`
+const API_BASE_URL = "/api/branches"
 
 export const branchService = {
   async getAllBranches(): Promise<Branch[]> {
-    const response = await fetch(BRANCH_API_BASE)
+    const response = await fetch(API_BASE_URL)
     if (!response.ok) throw new Error("Failed to fetch branches")
     return response.json()
   },
 
   async getBranchById(id: string): Promise<Branch> {
-    const response = await fetch(`${BRANCH_API_BASE}/${id}`)
+    const response = await fetch(`${API_BASE_URL}/${id}`)
     if (!response.ok) throw new Error("Failed to fetch branch")
     return response.json()
   },
 
   async createBranch(data: CreateBranchDto): Promise<Branch> {
-    const response = await fetch(BRANCH_API_BASE, {
+    const response = await fetch(API_BASE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -31,7 +26,7 @@ export const branchService = {
   },
 
   async updateBranch(data: UpdateBranchDto): Promise<Branch> {
-    const response = await fetch(`${BRANCH_API_BASE}/${data.id}`, {
+    const response = await fetch(`${API_BASE_URL}/${data.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -41,14 +36,14 @@ export const branchService = {
   },
 
   async deleteBranch(id: string): Promise<void> {
-    const response = await fetch(`${BRANCH_API_BASE}/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
       method: "DELETE",
     })
     if (!response.ok) throw new Error("Failed to delete branch")
   },
 
   async searchBranches(query: string): Promise<Branch[]> {
-    const response = await fetch(`${BRANCH_API_BASE}?q=${encodeURIComponent(query)}`)
+    const response = await fetch(`${API_BASE_URL}?q=${encodeURIComponent(query)}`)
     if (!response.ok) throw new Error("Failed to search branches")
     return response.json()
   },

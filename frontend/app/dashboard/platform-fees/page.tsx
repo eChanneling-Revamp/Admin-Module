@@ -1,12 +1,11 @@
 "use client"
 
-import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 export default function PlatformFeesPage() {
   return (
-    <ProtectedLayout>
+    <div className="p-6">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -45,6 +44,6 @@ export default function PlatformFeesPage() {
           </Card>
         </div>
       </div>
-    </ProtectedLayout>
+    </div>
   )
 }

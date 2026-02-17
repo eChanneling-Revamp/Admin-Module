@@ -70,12 +70,19 @@ export function LoginForm() {
       const response = await loginService({ username, password, twoFA })
 
       if (response.success && response.token && response.user) {
+        // Persist auth state first
         login(response.token, response.user, response.refreshToken)
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${response.user.name}!`,
-        })
-        router.push("/dashboard")
+
+        // Wait for navigation to complete before showing the toast so it aligns
+        // with the actual logged-in view (avoids toast showing while redirecting)
+        try {
+          await router.push("/dashboard")
+        } finally {
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${response.user.name || response.user.firstName || "user"}!`,
+          })
+        }
       } else {
         toast({
           title: "Login Failed",
@@ -95,7 +102,16 @@ export function LoginForm() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
+      {/* Loader overlay when submitting */}
+      {isLoading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 backdrop-blur">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
+            <span className="text-sm text-gray-700">Signing in…</span>
+          </div>
+        </div>
+      )}
       {/* Header Section */}
       <div className="text-center space-y-2 mb-4">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 shadow-lg mb-2">

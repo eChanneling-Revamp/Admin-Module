@@ -173,4 +173,25 @@ export const dashboardApi = {
       return []
     }
   },
+
+  getRecentActivity: async (): Promise<any[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/recent-activity?limit=10`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recent activity')
+      }
+
+      const data = await response.json()
+      return data.data || data
+    } catch (error) {
+      console.error('Recent activity error:', error)
+      return []
+    }
+  },
 }

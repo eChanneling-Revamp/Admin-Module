@@ -134,20 +134,26 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
 
         console.log('Appointments fetched:', appointmentsList.length);
         setAppointments(appointmentsList);
+      }
 
-        // Generate recent activities from appointments
-        const activities = appointmentsList.slice(0, 5).map((apt: any, index: number) => ({
-          id: apt.id || index,
-          action: apt.status === 'COMPLETED' ? 'Appointment completed' :
-            apt.status === 'CANCELLED' ? 'Appointment cancelled' :
-              apt.status === 'CONFIRMED' ? 'Appointment confirmed' : 'New appointment booked',
-          patient: apt.patientName || apt.patient?.name || 'Patient',
-          time: formatTimeAgo(apt.createdAt || apt.appointmentDate),
-          type: apt.status === 'COMPLETED' ? 'success' :
-            apt.status === 'CANCELLED' ? 'error' :
-              apt.status === 'CONFIRMED' ? 'success' : 'info'
-        }));
-        setRecentActivities(activities);
+      // Fetch recent activities
+      try {
+        const activityRes = await fetch(`${API_BASE_URL}/api/dashboard/recent-activity?limit=5`, { headers });
+        if (activityRes.ok) {
+          const data = await activityRes.json();
+          const activitiesList = data.data || data;
+
+          const mappedActivities = activitiesList.map((act: any) => ({
+            id: act.id,
+            action: act.action,
+            patient: act.resource || act.user, // Mapping resource/user to patient/user field
+            time: formatTimeAgo(act.timestamp),
+            type: act.action.includes('Registered') || act.action.includes('Added') ? 'success' : 'info'
+          }));
+          setRecentActivities(mappedActivities);
+        }
+      } catch (err) {
+        console.error('Failed to fetch recent activities', err);
       }
 
     } catch (error) {
@@ -467,8 +473,8 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                 {recentActivities.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className={`p-1.5 rounded-full ${activity.type === 'success' ? 'bg-emerald-100' :
-                        activity.type === 'error' ? 'bg-red-100' :
-                          activity.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100'
+                      activity.type === 'error' ? 'bg-red-100' :
+                        activity.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100'
                       }`}>
                       {activity.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
                       {activity.type === 'error' && <XCircle className="w-4 h-4 text-red-600" />}
@@ -580,10 +586,10 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                       <td className="py-3 px-4">
                         <Badge
                           className={`font-normal ${patient.status === 'Active'
-                              ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-0'
-                              : patient.status === 'Pending'
-                                ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white border-0'
-                                : 'bg-gray-100 text-gray-600 border-0'
+                            ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-0'
+                            : patient.status === 'Pending'
+                              ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white border-0'
+                              : 'bg-gray-100 text-gray-600 border-0'
                             }`}
                         >
                           {patient.status}

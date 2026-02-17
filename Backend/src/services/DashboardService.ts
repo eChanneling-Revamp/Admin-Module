@@ -205,21 +205,100 @@ export class DashboardService {
     }
   }
 
-  async getRecentActivity(limit: number) {
+  async getRecentActivity(limit: number = 5) {
     try {
-      const activities = await prisma.auditLog.findMany({
+      // Fetch latest users (including agents and corporate since they are User roles)
+      const latestUsers = await prisma.user.findMany({
         take: limit,
-        orderBy: { timestamp: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          lastLoginAt: true
+        }
       });
 
-      return activities.map(log => ({
-        id: log.id,
-        user: log.username || log.user_id || 'Unknown',
-        action: log.action,
-        resource: log.resource,
-        timestamp: log.timestamp,
-        details: log.details
-      }));
+      // Fetch latest doctors
+      const latestDoctors = await prisma.doctor.findMany({
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          specialization: true,
+          createdAt: true
+        }
+      });
+
+      // Fetch latest hospitals
+      const latestHospitals = await prisma.hospital.findMany({
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          createdAt: true
+        }
+      });
+
+      // Combine and map to activity format
+      const activities: any[] = [];
+
+      latestUsers.forEach(user => {
+        // User created event
+        activities.push({
+          id: `user-create-${user.id}`,
+          user: user.name || user.email,
+          action: `${user.role} Registered`,
+          resource: 'System',
+          timestamp: user.createdAt,
+          details: { role: user.role }
+        });
+
+        // User login event (if recent)
+        if (user.lastLoginAt) {
+          activities.push({
+            id: `user-login-${user.id}`,
+            user: user.name || user.email,
+            action: 'Login',
+            resource: 'Admin Portal',
+            timestamp: user.lastLoginAt,
+            details: {}
+          });
+        }
+      });
+
+      latestDoctors.forEach(doc => {
+        activities.push({
+          id: `doc-create-${doc.id}`,
+          user: 'System',
+          action: 'Doctor Onboarded',
+          resource: `Dr. ${doc.name}`,
+          timestamp: doc.createdAt,
+          details: { specialization: doc.specialization }
+        });
+      });
+
+      latestHospitals.forEach(hosp => {
+        activities.push({
+          id: `hosp-create-${hosp.id}`,
+          user: 'System',
+          action: 'Hospital Added',
+          resource: hosp.name,
+          timestamp: hosp.createdAt,
+          details: { city: hosp.city }
+        });
+      });
+
+      // Sort by timestamp desc and take limit
+      return activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
+
     } catch (error) {
       logger.error('Error getting recent activity:', error);
       return [];

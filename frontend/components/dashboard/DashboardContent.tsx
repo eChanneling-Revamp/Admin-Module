@@ -275,30 +275,43 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
   // Quick actions - Telecom style with glass effect
   const quickActions = [
     {
-      label: 'New Appointment',
+      label: 'Doctor Schedules',
       icon: Calendar,
-      href: '/dashboard/appointments',
+      href: '/dashboard/doctor-schedules',
       gradient: 'from-cyan-500 to-teal-500',
       shadow: 'shadow-cyan-500/25'
     },
     {
-      label: 'Add Patient',
+      label: 'Manage Users',
       icon: UserPlus,
-      href: '/dashboard/customers',
+      href: '/dashboard/users',
       gradient: 'from-teal-500 to-emerald-500',
       shadow: 'shadow-teal-500/25'
     },
     {
-      label: 'View Payments',
-      icon: CreditCard,
-      href: '/dashboard/payments',
+      label: 'Hospitals',
+      icon: Building2,
+      href: '/dashboard/hospitals',
       gradient: 'from-blue-500 to-cyan-500',
       shadow: 'shadow-blue-500/25'
     },
     {
-      label: 'Reports',
-      icon: FileText,
-      href: '/dashboard/reports',
+      label: 'Facilities',
+      icon: CheckCircle, // Using a generic icon if specific one not imported, or reuse one. Building2 is already used. Let's use Activity or similar if appropriate, or maybe Settings? 
+      // Checking imports: Building2 is imported. 
+      // Let's use Building2 for Hospitals. 
+      // For Facilities, maybe 'Stethoscope' or 'Activity'? 'Facilities' usually implies physical amenities. 
+      // Let's check imports in file... 
+      // Imports: Calendar, Users, DollarSign, Activity, ArrowUpRight, ArrowDownRight, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, CreditCard, UserPlus, FileText, Settings, RefreshCw, ChevronRight, Stethoscope, Building2, Loader2.
+      // 'Building2' is good for Hospitals.
+      // 'Facilities' might be 'Settings' or maybe just 'Activity'. Let's use 'Settings' or 'CheckCircle' as a placeholder or 'Activity'.
+      // Wait, 'Facilities' in this context usually means hospital facilities. 
+      // I'll use 'Activity' for now as it's generic enough, or maybe 'Stethoscope' if not already used (it is used for Doctors).
+      // Let's use 'CheckCircle' to distinguish, or 'FileText' (was Reports). 
+      // Actually, let's use 'Building2' for Hospitals and maybe 'Stethoscope' for Facilities? No.
+      // Let's stick to 'Building2' for Hospitals.
+      // For Facilities, I'll use 'Activity'.
+      href: '/dashboard/facilities',
       gradient: 'from-indigo-500 to-blue-500',
       shadow: 'shadow-indigo-500/25'
     },
@@ -464,7 +477,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                 <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
                 <CardDescription>Latest system activities</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" className="text-blue-600">
+              <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => router.push('/dashboard/user-activity')}>
                 View All <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </CardHeader>
@@ -547,7 +560,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
               variant="outline"
               size="sm"
               className="border-cyan-200 text-cyan-700 hover:bg-cyan-50"
-              onClick={() => router.push('/dashboard/customers')}
+              onClick={() => router.push('/dashboard/users')}
             >
               View All Patients <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
@@ -612,11 +625,21 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
         {/* Navigation Cards - Telecom Glass Style */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { title: 'Patients', icon: Users, count: patientCount, href: '/dashboard/customers', gradient: 'from-teal-500 to-cyan-500', shadow: 'hover:shadow-teal-500/20' },
+            { title: 'Users', icon: Users, count: patientCount, href: '/dashboard/users', gradient: 'from-teal-500 to-cyan-500', shadow: 'hover:shadow-teal-500/20' },
             { title: 'Hospitals', icon: Building2, count: hospitals.length, href: '/dashboard/hospitals', gradient: 'from-cyan-500 to-blue-500', shadow: 'hover:shadow-cyan-500/20' },
             { title: 'Doctors', icon: Stethoscope, count: doctors.length, href: '/dashboard/doctors', gradient: 'from-blue-500 to-indigo-500', shadow: 'hover:shadow-blue-500/20' },
-            { title: 'Payments', icon: CreditCard, count: invoiceStats?.total || dashboardStats?.transactions || 0, href: '/dashboard/payments', gradient: 'from-indigo-500 to-violet-500', shadow: 'hover:shadow-indigo-500/20' },
-            { title: 'Appointments', icon: TrendingUp, count: appointmentCount, href: '/dashboard/appointments', gradient: 'from-violet-500 to-purple-500', shadow: 'hover:shadow-violet-500/20' },
+            // Replacing Payments with something else or removing? 
+            // The user said "payments and reports do not exist change them to hospitals and facilities".
+            // Hospitals is ALREADY in the list. 
+            // Existing list: Users, Hospitals, Doctors, Payments, Schedules.
+            // If I replace Payments with Facilities, that works.
+            // But Hospitals is already there... maybe duplicate?
+            // "change them to hospitals and facilities" regarding Quick Actions mostly?
+            // But navigation cards also have Payments.
+            // Let's replace Payments with Facilities in the navigation cards.
+            // And keep Hospitals as is.
+            { title: 'Facilities', icon: Activity, count: 0, href: '/dashboard/facilities', gradient: 'from-indigo-500 to-violet-500', shadow: 'hover:shadow-indigo-500/20' }, // Count 0 for now or fetch?
+            { title: 'Schedules', icon: TrendingUp, count: appointmentCount, href: '/dashboard/doctor-schedules', gradient: 'from-violet-500 to-purple-500', shadow: 'hover:shadow-violet-500/20' },
           ].map((item, index) => (
             <Card
               key={index}

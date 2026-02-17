@@ -80,13 +80,13 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       };
 
       // Fetch all data in parallel
-      const [statsRes, invoiceRes, doctorsRes, patientsRes, hospitalsRes, appointmentsRes] = await Promise.all([
+      // Fetch all data in parallel
+      const [statsRes, invoiceRes, doctorsRes, patientsRes, hospitalsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/dashboard/stats`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/dashboard/invoices/stats`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/doctors`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/users?role=PATIENT`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/hospitals`, { headers }).catch(() => null),
-        fetch(`${API_BASE_URL}/api/appointments`, { headers }).catch(() => null),
       ]);
 
       // Process dashboard stats
@@ -119,22 +119,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
         setHospitals(Array.isArray(data) ? data : data.data || []);
       }
 
-      // Process appointments - handle paginated response
-      if (appointmentsRes?.ok) {
-        const data = await appointmentsRes.json();
-        // Handle both array and paginated response formats
-        let appointmentsList: any[] = [];
-        if (Array.isArray(data)) {
-          appointmentsList = data;
-        } else if (data.data && Array.isArray(data.data)) {
-          appointmentsList = data.data;
-        } else if (data.items && Array.isArray(data.items)) {
-          appointmentsList = data.items;
-        }
 
-        console.log('Appointments fetched:', appointmentsList.length);
-        setAppointments(appointmentsList);
-      }
 
       // Fetch recent activities
       try {

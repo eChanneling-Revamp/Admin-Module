@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    externalDir: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -14,6 +11,12 @@ const nextConfig = {
       {
         source: '/payment/:path*',
         destination: 'https://dpdlab1.slt.lk:8645/payment/:path*',
+      },
+      {
+        source: '/api/:path*',
+        destination: process.env.NEXT_PUBLIC_API_URL
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
+          : 'https://admin-module-backend-igfcb5tmy-tharindu-ariyawanshas-projects.vercel.app/api/:path*',
       },
     ]
   },

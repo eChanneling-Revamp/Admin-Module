@@ -98,12 +98,12 @@ export function LoginForm() {
     <div className="space-y-4">
       {/* Header Section - Compact */}
       <div className="text-center space-y-1 mb-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-cyan-500 via-teal-500 to-blue-500 shadow-md shadow-cyan-500/25">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 via-teal-500 to-blue-500 shadow-md shadow-cyan-500/25">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold bg-linear-to-r from-cyan-600 via-teal-600 to-blue-600 bg-clip-text text-transparent">Welcome Back</h1>
+        <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 bg-clip-text text-transparent">Welcome Back</h1>
         <p className="text-xs text-gray-500">Sign in to access your dashboard</p>
       </div>
 
@@ -156,7 +156,7 @@ export function LoginForm() {
         {/* Login Button */}
         <Button
           type="submit"
-          className="w-full bg-linear-to-r from-cyan-500 via-teal-500 to-blue-500 hover:from-cyan-600 hover:via-teal-600 hover:to-blue-600 text-white font-semibold h-11 rounded-lg text-sm shadow-md shadow-cyan-500/20 hover:shadow-lg transition-all duration-200 mt-2"
+          className="w-full bg-gradient-to-r from-cyan-500 via-teal-500 to-blue-500 hover:from-cyan-600 hover:via-teal-600 hover:to-blue-600 text-white font-semibold h-11 rounded-lg text-sm shadow-md shadow-cyan-500/20 hover:shadow-lg transition-all duration-200 mt-2"
           disabled={isLoading}
         >
           {isLoading ? (
@@ -181,7 +181,7 @@ export function LoginForm() {
 
         {/* Security Notice - Compact */}
         <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-          <div className="p-1.5 rounded-md bg-linear-to-br from-cyan-500 to-teal-500">
+          <div className="p-1.5 rounded-md bg-gradient-to-br from-cyan-500 to-teal-500">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>

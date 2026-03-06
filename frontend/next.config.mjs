@@ -10,9 +10,9 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production'
-          ? 'https://your-app-name.vercel.app/api/:path*'
-          : 'http://localhost:5000/api/:path*',
+        destination: process.env.NEXT_PUBLIC_API_URL
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
+          : 'https://admin-module-backend-igfcb5tmy-tharindu-ariyawanshas-projects.vercel.app/api/:path*',
       },
     ]
   },

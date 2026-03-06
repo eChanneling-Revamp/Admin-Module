@@ -14,8 +14,15 @@
     "test": "npm run test --workspaces --if-present"
   },
   "optionalDependencies": {
+    "@next/swc-darwin-arm64": "14.2.33",
+    "@next/swc-darwin-x64": "14.2.33",
+    "@next/swc-linux-arm64-gnu": "14.2.33",
+    "@next/swc-linux-arm64-musl": "14.2.33",
     "@next/swc-linux-x64-gnu": "14.2.33",
     "@next/swc-linux-x64-musl": "14.2.33",
+    "@next/swc-win32-arm64-msvc": "14.2.33",
+    "@next/swc-win32-ia32-msvc": "14.2.33",
+    "@next/swc-win32-x64-msvc": "14.2.33",
     "@tailwindcss/oxide-linux-x64-gnu": "4.1.16",
     "@tailwindcss/oxide-linux-x64-musl": "4.1.16",
     "lightningcss-linux-x64-gnu": "^1.30.2",

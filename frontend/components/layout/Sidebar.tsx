@@ -203,7 +203,7 @@ export function Sidebar() {
     : menuItems
 
   return (
-    <aside className="w-72 bg-gradient-to-b from-white via-slate-50 to-emerald-50/50 text-slate-800 flex flex-col h-screen fixed left-0 top-0 shadow-xl border-r border-emerald-100 z-50">
+    <aside className="w-72 bg-linear-to-b from-white via-slate-50 to-emerald-50/50 text-slate-800 flex flex-col h-screen fixed left-0 top-0 shadow-xl border-r border-emerald-100 z-50">
       {/* Logo Section */}
       <div className="p-5 border-b border-emerald-100">
         <div className="flex items-center gap-3">
@@ -217,7 +217,7 @@ export function Sidebar() {
             />
           </div>
           <div>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-lg font-bold bg-linear-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
               eChannelling
             </h1>
             <p className="text-[10px] text-emerald-600/70 font-medium tracking-wider uppercase">Admin Portal</p>
@@ -270,7 +270,7 @@ export function Sidebar() {
                         className={cn(
                           "p-2 rounded-lg transition-all duration-200",
                           expandedItems.includes(item.title)
-                            ? "bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow-lg shadow-emerald-500/25"
+                            ? "bg-linear-to-br from-emerald-500 to-blue-600 text-white shadow-lg shadow-emerald-500/25"
                             : "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:text-emerald-700"
                         )}
                       >
@@ -304,7 +304,7 @@ export function Sidebar() {
                             className={cn(
                               "flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all duration-200",
                               isActive(child.href)
-                                ? "bg-gradient-to-r from-emerald-100 to-blue-100 text-emerald-700 font-medium border-l-2 border-emerald-500 -ml-[17px] pl-[30px]"
+                                ? "bg-linear-to-r from-emerald-100 to-blue-100 text-emerald-700 font-medium border-l-2 border-emerald-500 -ml-[17px] pl-[30px]"
                                 : "text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
                             )}
                           >
@@ -326,7 +326,7 @@ export function Sidebar() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                     isActive(item.href!)
-                      ? "bg-gradient-to-r from-emerald-100 to-blue-100 text-emerald-800"
+                      ? "bg-linear-to-r from-emerald-100 to-blue-100 text-emerald-800"
                       : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
                   )}
                 >
@@ -334,7 +334,7 @@ export function Sidebar() {
                     className={cn(
                       "p-2 rounded-lg transition-all duration-200",
                       isActive(item.href!)
-                        ? "bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow-lg shadow-emerald-500/25"
+                        ? "bg-linear-to-br from-emerald-500 to-blue-600 text-white shadow-lg shadow-emerald-500/25"
                         : "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:text-emerald-700"
                     )}
                   >
@@ -342,7 +342,7 @@ export function Sidebar() {
                   </div>
                   <span className="font-medium text-sm">{item.title}</span>
                   {item.badge && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-blue-600 text-white rounded-full">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-linear-to-r from-emerald-500 to-blue-600 text-white rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -354,7 +354,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-emerald-100 bg-gradient-to-r from-emerald-50/50 to-blue-50/50">
+      <div className="p-4 border-t border-emerald-100 bg-linear-to-r from-emerald-50/50 to-blue-50/50">
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>© 2025 eChannelling</span>
           <span className="text-emerald-600 font-medium">v2.0</span>

@@ -271,7 +271,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       trend: 'up',
       icon: Calendar,
       gradient: 'from-cyan-500 to-teal-500',
-      lightColor: 'bg-gradient-to-br from-cyan-50 to-teal-50',
+      lightColor: 'bg-linear-to-br from-cyan-50 to-teal-50',
       textColor: 'text-cyan-600'
     },
     {
@@ -281,7 +281,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       trend: 'up',
       icon: Users,
       gradient: 'from-teal-500 to-emerald-500',
-      lightColor: 'bg-gradient-to-br from-teal-50 to-emerald-50',
+      lightColor: 'bg-linear-to-br from-teal-50 to-emerald-50',
       textColor: 'text-teal-600'
     },
     {
@@ -291,7 +291,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       trend: Number(paymentSuccessRate) >= 70 ? 'up' : 'down',
       icon: DollarSign,
       gradient: 'from-blue-500 to-cyan-500',
-      lightColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+      lightColor: 'bg-linear-to-br from-blue-50 to-cyan-50',
       textColor: 'text-blue-600'
     },
     {
@@ -301,17 +301,17 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       trend: 'up',
       icon: Stethoscope,
       gradient: 'from-indigo-500 to-blue-500',
-      lightColor: 'bg-gradient-to-br from-indigo-50 to-blue-50',
+      lightColor: 'bg-linear-to-br from-indigo-50 to-blue-50',
       textColor: 'text-indigo-600'
     },
   ];
 
   // Today's summary - using real data
   const todaySummary = [
-    { label: 'Appointments Today', value: todaysAppointments.length, icon: Calendar, color: 'text-cyan-600', bg: 'bg-gradient-to-br from-cyan-50 to-teal-50' },
-    { label: 'Completed', value: completedToday, icon: CheckCircle, color: 'text-teal-600', bg: 'bg-gradient-to-br from-teal-50 to-emerald-50' },
-    { label: 'Pending', value: pendingToday, icon: Clock, color: 'text-blue-600', bg: 'bg-gradient-to-br from-blue-50 to-cyan-50' },
-    { label: 'Cancelled', value: cancelledToday, icon: XCircle, color: 'text-rose-600', bg: 'bg-gradient-to-br from-rose-50 to-pink-50' },
+    { label: 'Appointments Today', value: todaysAppointments.length, icon: Calendar, color: 'text-cyan-600', bg: 'bg-linear-to-br from-cyan-50 to-teal-50' },
+    { label: 'Completed', value: completedToday, icon: CheckCircle, color: 'text-teal-600', bg: 'bg-linear-to-br from-teal-50 to-emerald-50' },
+    { label: 'Pending', value: pendingToday, icon: Clock, color: 'text-blue-600', bg: 'bg-linear-to-br from-blue-50 to-cyan-50' },
+    { label: 'Cancelled', value: cancelledToday, icon: XCircle, color: 'text-rose-600', bg: 'bg-linear-to-br from-rose-50 to-pink-50' },
   ];
 
   // Quick actions - Telecom style with glass effect
@@ -404,7 +404,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/30 to-teal-50/20 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-cyan-50/30 to-teal-50/20 p-4 md:p-6 lg:p-8 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-cyan-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading dashboard data...</p>
@@ -414,13 +414,13 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/30 to-teal-50/20 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-cyan-50/30 to-teal-50/20 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 bg-clip-text text-transparent">{greeting}, Admin</h1>
+            <h1 className="text-2xl md:text-3xl font-bold bg-linear-to-r from-cyan-600 via-teal-600 to-blue-600 bg-clip-text text-transparent">{greeting}, Admin</h1>
             <p className="text-gray-500 mt-1">
               {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
@@ -471,7 +471,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
           {/* Today's Summary */}
           <Card className="lg:col-span-2 border-0 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Today's Summary</CardTitle>
+              <CardTitle className="text-lg font-semibold bg-linear-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Today's Summary</CardTitle>
               <CardDescription>Overview of today's appointments</CardDescription>
             </CardHeader>
             <CardContent>
@@ -488,16 +488,16 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
           </Card>
 
           {/* Quick Actions - Telecom Glass Style */}
-          <Card className="border-0 shadow-sm bg-gradient-to-br from-slate-50 to-cyan-50/30">
+          <Card className="border-0 shadow-sm bg-linear-to-br from-slate-50 to-cyan-50/30">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Quick Actions</CardTitle>
+              <CardTitle className="text-lg font-semibold bg-linear-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Quick Actions</CardTitle>
               <CardDescription>Frequently used actions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickActions.map((action, index) => (
                 <button
                   key={index}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r ${action.gradient} text-white font-medium shadow-lg ${action.shadow} hover:shadow-xl hover:scale-[1.02] transition-all duration-200`}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl bg-linear-to-r ${action.gradient} text-white font-medium shadow-lg ${action.shadow} hover:shadow-xl hover:scale-[1.02] transition-all duration-200`}
                   onClick={() => router.push(action.href)}
                 >
                   <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -515,7 +515,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
           <Card className="lg:col-span-2 border-0 shadow-sm">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-blue-600" />
                   Payment Overview
                 </CardTitle>
@@ -532,19 +532,19 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100/60">
+                <div className="p-4 rounded-xl bg-linear-to-br from-blue-50 to-cyan-50 border border-blue-100/60">
                   <p className="text-xs text-gray-500">Transactions</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">{paymentTransactionCount}</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/60">
+                <div className="p-4 rounded-xl bg-linear-to-br from-emerald-50 to-teal-50 border border-emerald-100/60">
                   <p className="text-xs text-gray-500">Success Rate</p>
                   <p className="text-2xl font-bold text-emerald-700 mt-1">{paymentSuccessRate}%</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/60">
+                <div className="p-4 rounded-xl bg-linear-to-br from-amber-50 to-orange-50 border border-amber-100/60">
                   <p className="text-xs text-gray-500">Pending</p>
                   <p className="text-2xl font-bold text-amber-700 mt-1">{pendingPaymentCount}</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100/60">
+                <div className="p-4 rounded-xl bg-linear-to-br from-rose-50 to-pink-50 border border-rose-100/60">
                   <p className="text-xs text-gray-500">Failed</p>
                   <p className="text-2xl font-bold text-rose-700 mt-1">{failedPaymentCount}</p>
                 </div>
@@ -650,7 +650,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
               <div className="space-y-3">
                 {topDoctorsList.length > 0 ? topDoctorsList.map((doctor: any, index: number) => (
                   <div key={index} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-semibold">
                       {doctor.name.split(' ')[1]?.charAt(0) || 'D'}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -675,9 +675,9 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
 
         {/* Recent Patients Section */}
         <Card className="border-0 shadow-sm overflow-hidden">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gradient-to-r from-cyan-50/50 to-teal-50/50">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-linear-to-r from-cyan-50/50 to-teal-50/50">
             <div>
-              <CardTitle className="text-lg font-semibold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold bg-linear-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent flex items-center gap-2">
                 <Users className="w-5 h-5 text-cyan-600" />
                 Recent Patients
               </CardTitle>
@@ -695,7 +695,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-slate-50 to-cyan-50/30">
+                <thead className="bg-linear-to-r from-slate-50 to-cyan-50/30">
                   <tr>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Patient</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
@@ -709,7 +709,7 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                     <tr key={patient.id} className="hover:bg-cyan-50/30 transition-colors cursor-pointer">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                          <div className="w-9 h-9 rounded-full bg-linear-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
                             {patient.avatar}
                           </div>
                           <span className="font-medium text-gray-900">{patient.name}</span>
@@ -726,9 +726,9 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                       <td className="py-3 px-4">
                         <Badge
                           className={`font-normal ${patient.status === 'Active'
-                            ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-0'
+                            ? 'bg-linear-to-r from-teal-500 to-emerald-500 text-white border-0'
                             : patient.status === 'Pending'
-                              ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white border-0'
+                              ? 'bg-linear-to-r from-amber-400 to-orange-400 text-white border-0'
                               : 'bg-gray-100 text-gray-600 border-0'
                             }`}
                         >
@@ -774,8 +774,8 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
               onClick={() => router.push(item.href)}
             >
               <CardContent className="p-5 relative">
-                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${item.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg`}>
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-linear-to-br ${item.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2`} />
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${item.gradient} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg`}>
                   <item.icon className="w-6 h-6 text-white" />
                 </div>
                 <p className="font-semibold text-gray-900">{item.title}</p>

@@ -96,7 +96,7 @@ export class DoctorController {
 
     try {
       const doctor = await this.doctorService.getDoctorById(id);
-      
+
       if (!doctor) {
         ResponseHelper.notFound(res, 'Doctor not found');
         return;
@@ -138,7 +138,7 @@ export class DoctorController {
 
     try {
       const doctor = await this.doctorService.updateDoctor(id, req.body);
-      
+
       if (!doctor) {
         ResponseHelper.notFound(res, 'Doctor not found');
         return;
@@ -156,7 +156,7 @@ export class DoctorController {
 
     try {
       const success = await this.doctorService.deleteDoctor(id);
-      
+
       if (!success) {
         ResponseHelper.notFound(res, 'Doctor not found');
         return;
@@ -228,6 +228,68 @@ export class DoctorController {
     } catch (error) {
       logger.error('Get doctor schedules error:', error);
       ResponseHelper.badRequest(res, 'Failed to retrieve doctor schedules');
+    }
+  });
+  createSession = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    try {
+      const session = await this.doctorService.createSession(req.body);
+      ResponseHelper.created(res, session, 'Session created successfully');
+    } catch (error) {
+      logger.error('Create session error:', error);
+      ResponseHelper.badRequest(res, 'Failed to create session');
+    }
+  });
+
+  updateSession = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    try {
+      const session = await this.doctorService.updateSession(id, req.body);
+      if (!session) {
+        ResponseHelper.notFound(res, 'Session not found');
+        return;
+      }
+      ResponseHelper.success(res, session, 'Session updated successfully');
+    } catch (error) {
+      logger.error('Update session error:', error);
+      ResponseHelper.badRequest(res, 'Failed to update session');
+    }
+  });
+  assignDoctorToHospital = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { doctorId, hospitalId } = req.body;
+
+    if (!doctorId || !hospitalId) {
+      ResponseHelper.badRequest(res, 'Doctor ID and Hospital ID are required');
+      return;
+    }
+
+    try {
+      const assignment = await this.doctorService.assignDoctorToHospital(doctorId, hospitalId);
+      ResponseHelper.created(res, assignment, 'Doctor assigned to hospital successfully');
+    } catch (error) {
+      logger.error('Assign doctor to hospital error:', error);
+      ResponseHelper.badRequest(res, 'Failed to assign doctor to hospital');
+    }
+  });
+
+  removeDoctorFromHospital = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { doctorId, hospitalId } = req.body; // Getting from body for DELETE mostly, or could be params
+    // Let's support body for now as it's cleaner for simple assignments if we don't assume ids are in URL
+
+    if (!doctorId || !hospitalId) {
+      ResponseHelper.badRequest(res, 'Doctor ID and Hospital ID are required');
+      return;
+    }
+
+    try {
+      const success = await this.doctorService.removeDoctorFromHospital(doctorId, hospitalId);
+      if (!success) {
+        ResponseHelper.notFound(res, 'Assignment not found');
+        return;
+      }
+      ResponseHelper.success(res, null, 'Doctor removed from hospital successfully');
+    } catch (error) {
+      logger.error('Remove doctor from hospital error:', error);
+      ResponseHelper.badRequest(res, 'Failed to remove doctor from hospital');
     }
   });
 }

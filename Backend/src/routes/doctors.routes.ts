@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { DoctorController, 
-  createDoctorSchema, 
-  updateDoctorSchema, 
+import {
+  DoctorController,
+  createDoctorSchema,
+  updateDoctorSchema,
   doctorParamsSchema,
   updateDoctorStatusSchema,
   doctorScheduleQuerySchema
@@ -19,18 +20,18 @@ router.use(authenticateToken);
 router.use(requireActiveUser);
 
 // Doctor CRUD routes
-router.post('/', 
+router.post('/',
   requirePermission({ resource: 'doctor', action: 'create' }),
-  validate(createDoctorSchema), 
+  validate(createDoctorSchema),
   doctorController.createDoctor
 );
 
-router.get('/', 
+router.get('/',
   requirePermission({ resource: 'doctor', action: 'read' }),
   doctorController.getAllDoctors
 );
 
-router.get('/stats', 
+router.get('/stats',
   requirePermission({ resource: 'doctor', action: 'read' }),
   doctorController.getDoctorStats
 );
@@ -46,10 +47,30 @@ router.get('/schedules',
   doctorController.getDoctorSchedules
 );
 
-router.get('/:id', 
+router.post('/schedules',
+  requirePermission({ resource: 'doctor', action: 'create' }),
+  doctorController.createSession
+);
+
+router.put('/schedules/:id',
+  requirePermission({ resource: 'doctor', action: 'update' }),
+  doctorController.updateSession
+);
+
+router.get('/:id',
   requirePermission({ resource: 'doctor', action: 'read' }),
-  validate(doctorParamsSchema), 
+  validate(doctorParamsSchema),
   doctorController.getDoctorById
+);
+
+router.post('/assignments',
+  requirePermission({ resource: 'doctor', action: 'update' }),
+  doctorController.assignDoctorToHospital
+);
+
+router.delete('/assignments',
+  requirePermission({ resource: 'doctor', action: 'update' }),
+  doctorController.removeDoctorFromHospital
 );
 
 router.patch('/:id/status',
@@ -58,18 +79,18 @@ router.patch('/:id/status',
   doctorController.updateDoctorStatus
 );
 
-router.put('/:id', 
+router.put('/:id',
   requirePermission({ resource: 'doctor', action: 'update' }),
   validate(z.object({
     body: updateDoctorSchema.shape.body,
     params: doctorParamsSchema.shape.params,
-  })), 
+  })),
   doctorController.updateDoctor
 );
 
-router.delete('/:id', 
+router.delete('/:id',
   requirePermission({ resource: 'doctor', action: 'delete' }),
-  validate(doctorParamsSchema), 
+  validate(doctorParamsSchema),
   doctorController.deleteDoctor
 );
 

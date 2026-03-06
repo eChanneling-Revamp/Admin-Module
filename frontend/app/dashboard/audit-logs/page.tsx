@@ -1,6 +1,5 @@
 "use client"
 
-import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Shield, Download, AlertCircle } from "lucide-react"
@@ -19,7 +18,7 @@ const auditData = [
 
 export default function AuditLogsPage() {
   return (
-    <ProtectedLayout>
+    <div className="p-6">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -153,6 +152,6 @@ export default function AuditLogsPage() {
           </CardContent>
         </Card>
       </div>
-    </ProtectedLayout>
+    </div>
   )
 }

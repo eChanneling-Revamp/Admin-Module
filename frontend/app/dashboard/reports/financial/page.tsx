@@ -1,6 +1,5 @@
 "use client"
 
-import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BarChart, Download, FileText, TrendingUp } from "lucide-react"
@@ -43,7 +42,7 @@ const reportTypes = [
 
 export default function FinancialReportsPage() {
   return (
-    <ProtectedLayout>
+    <div className="p-6">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -163,6 +162,6 @@ export default function FinancialReportsPage() {
           </CardContent>
         </Card>
       </div>
-    </ProtectedLayout>
+    </div>
   )
 }

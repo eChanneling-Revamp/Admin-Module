@@ -567,6 +567,141 @@ export class DoctorService {
       };
     }
   }
+  async createSession(data: any): Promise<any> {
+    try {
+      // For now, if no nurseId is provided, we try to find the first available nurse to satisfy the foreign key constraint.
+      // In a real app, this should be selected by the user.
+      let nurseId = data.nurseId;
+      if (!nurseId) {
+        const nurse = await prisma.nurseDetail.findFirst();
+        if (nurse) {
+          nurseId = nurse.id;
+        } else {
+          // If no nurse exists, create a dummy one if we can, or throw error.
+          // For safety, let's assume one exists or we fail.
+          throw new Error("No nurse available to assign to session");
+        }
+      }
+
+      const session = await prisma.session.create({
+        data: {
+          doctorId: data.doctorId,
+          hospitalId: data.hospitalId,
+          nurseId: nurseId,
+          location: data.location || 'Room 1',
+          startTime: new Date(data.startTime),
+          endTime: new Date(data.endTime),
+          scheduledAt: new Date(data.date), // Assuming date is passed
+          capacity: data.capacity || 20,
+          status: 'SCHEDULED',
+          // duration is calculated or optional
+        },
+        include: {
+          doctor: true,
+          hospital: true
+        }
+      });
+      return session;
+    } catch (error) {
+      logger.error('Error creating session:', error);
+      throw error;
+    }
+  }
+
+  async updateSession(id: string, data: any): Promise<any> {
+    try {
+      const session = await prisma.session.update({
+        where: { id },
+        data: {
+          doctorId: data.doctorId,
+          hospitalId: data.hospitalId,
+          nurseId: data.nurseId,
+          location: data.location,
+          startTime: data.startTime ? new Date(data.startTime) : undefined,
+          endTime: data.endTime ? new Date(data.endTime) : undefined,
+          scheduledAt: data.date ? new Date(data.date) : undefined,
+          capacity: data.capacity,
+          status: data.status,
+        },
+        include: {
+          doctor: true,
+          hospital: true
+        }
+      });
+      return session;
+    } catch (error) {
+      logger.error('Error updating session:', error);
+      throw error;
+    }
+  }
+  async assignDoctorToHospital(doctorId: string, hospitalId: string): Promise<any> {
+    try {
+      // Check if assignment already exists
+      const existingAssignment = await prisma.doctorHospital.findUnique({
+        where: {
+          doctorId_hospitalId: {
+            doctorId,
+            hospitalId,
+          },
+        },
+      });
+
+      if (existingAssignment) {
+        if (!existingAssignment.isActive) {
+          // Reactivate if it was inactive
+          return await prisma.doctorHospital.update({
+            where: { id: existingAssignment.id },
+            data: { isActive: true, assignedAt: new Date() },
+          });
+        }
+        return existingAssignment; // Already active
+      }
+
+      // Create new assignment
+      const assignment = await prisma.doctorHospital.create({
+        data: {
+          doctorId,
+          hospitalId,
+          isActive: true,
+        },
+      });
+      return assignment;
+    } catch (error) {
+      logger.error('Error assigning doctor to hospital:', error);
+      throw error;
+    }
+  }
+
+  async removeDoctorFromHospital(doctorId: string, hospitalId: string): Promise<boolean> {
+    try {
+      // We can either soft delete (isActive=false) or hard delete. 
+      // The schema supports isActive, so soft delete is safer usually, but let's see if we want to remove access.
+      // If we used hard delete in other places, we should stick to it. But since we have isActive, let's use it.
+      // However, the user request implies "removing". Let's try to find if there's an existing assignment first.
+
+      const assignment = await prisma.doctorHospital.findUnique({
+        where: {
+          doctorId_hospitalId: {
+            doctorId,
+            hospitalId
+          }
+        }
+      });
+
+      if (!assignment) return false;
+
+      // Soft delete
+      await prisma.doctorHospital.update({
+        where: { id: assignment.id },
+        data: { isActive: false }
+      });
+
+      return true;
+    } catch (error) {
+      logger.error('Error removing doctor from hospital:', error);
+      return false;
+    }
+  }
 }
 
 export default new DoctorService();

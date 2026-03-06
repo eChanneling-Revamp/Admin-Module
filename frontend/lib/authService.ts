@@ -37,10 +37,7 @@ interface VerifyOTPResponse {
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   try {
     // Use external backend API - configure NEXT_PUBLIC_API_URL in environment
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!backendUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Remove trailing slash to prevent double slashes
     const cleanUrl = backendUrl.replace(/\/$/, '')
     const response = await fetch(`${cleanUrl}/api/auth/login`, {
@@ -79,10 +76,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
 
 export async function requestPasswordReset(identifier: string): Promise<PasswordResetResponse> {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!backendUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Remove trailing slash to prevent double slashes
     const cleanUrl = backendUrl.replace(/\/$/, '')
     const response = await fetch(`${cleanUrl}/api/auth/forgot-password`, {
@@ -110,10 +104,7 @@ export async function requestPasswordReset(identifier: string): Promise<Password
 // Optional: Add refresh token function
 export async function refreshToken(refreshToken: string): Promise<LoginResponse> {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!backendUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Remove trailing slash to prevent double slashes
     const cleanUrl = backendUrl.replace(/\/$/, '')
     const response = await fetch(`${cleanUrl}/api/auth/refresh`, {
@@ -152,10 +143,7 @@ export async function refreshToken(refreshToken: string): Promise<LoginResponse>
 
 export async function verifyOTP(identifier: string, otp: string): Promise<VerifyOTPResponse> {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!backendUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Remove trailing slash to prevent double slashes
     const cleanUrl = backendUrl.replace(/\/$/, '')
     const response = await fetch(`${cleanUrl}/api/auth/verify-otp`, {
@@ -184,10 +172,7 @@ export async function verifyOTP(identifier: string, otp: string): Promise<Verify
 
 export async function resetPassword(token: string, newPassword: string): Promise<PasswordResetResponse> {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!backendUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
-    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     // Remove trailing slash to prevent double slashes
     const cleanUrl = backendUrl.replace(/\/$/, '')
     const response = await fetch(`${cleanUrl}/api/auth/reset-password`, {

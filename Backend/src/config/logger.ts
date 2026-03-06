@@ -30,8 +30,8 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports only in development environment
-if (env.NODE_ENV === 'development') {
+// Add file transports only in development environment and not on Vercel
+if (env.NODE_ENV === 'development' && !process.env.VERCEL) {
   transports.push(
     // File transport for errors
     new winston.transports.File({
@@ -40,7 +40,7 @@ if (env.NODE_ENV === 'development') {
       maxsize: 5242880, // 5MB
       maxFiles: 5,
     }),
-    
+
     // File transport for all logs
     new winston.transports.File({
       filename: path.join('logs', 'combined.log'),
@@ -57,12 +57,16 @@ export const logger = winston.createLogger({
   transports,
 });
 
-// Create logs directory if it doesn't exist (only in development)
+// Create logs directory if it doesn't exist (only in development and not on Vercel)
 import fs from 'fs';
-if (env.NODE_ENV === 'development') {
+if (env.NODE_ENV === 'development' && !process.env.VERCEL) {
   const logsDir = path.join(process.cwd(), 'logs');
-  if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true });
+  try {
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+  } catch (error) {
+    console.warn('Failed to create logs directory, disabling file logging:', error);
   }
 }
 

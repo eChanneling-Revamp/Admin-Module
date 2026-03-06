@@ -1,59 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ProtectedLayout } from "@/components/layout/ProtectedLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Search, UserPlus, MoreVertical, Edit, Trash2 } from "lucide-react"
-import { userApi, type User, type UserQueryParams, type CreateUserData, type UpdateUserData } from "@/lib/api/userApi"
+import { Search, UserPlus, Edit, Trash2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { UserModal } from "@/components/users/UserModal"
+import { userApi, type User, type UserQueryParams } from "@/lib/api/userApi"
 
 export default function UsersPage() {
+  const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [formData, setFormData] = useState<CreateUserData>({
-    email: "",
-    password: "",
-    name: "",
-    role: "ADMIN",
-  })
-  const [editFormData, setEditFormData] = useState<UpdateUserData>({
-    name: "",
-    role: "ADMIN",
-    isActive: true,
-  })
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
     totalPages: 0
   })
-
-  const roleOptions = ["ADMIN", "SUPERVISOR", "AGENT", "CORPORATE", "PATIENT"]
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -78,6 +48,11 @@ export default function UsersPage() {
     } catch (error) {
       console.error("Error fetching users:", error)
       setUsers([])
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -94,82 +69,41 @@ export default function UsersPage() {
     
     try {
       await userApi.delete(id)
+      toast({ title: "Success", description: "User deleted successfully" })
       await fetchUsers()
     } catch (error) {
       console.error("Error deleting user:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive",
+      })
     }
   }
 
   const handleToggleStatus = async (id: string) => {
     try {
       await userApi.toggleStatus(id)
+      toast({ title: "Success", description: "User status updated" })
       await fetchUsers()
     } catch (error) {
       console.error("Error toggling user status:", error)
-    }
-  }
-
-  const handleAddUser = async () => {
-    try {
-      await userApi.create({
-        email: formData.email.trim(),
-        password: formData.password,
-        name: formData.name?.trim() || undefined,
-        role: formData.role,
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
       })
-      await fetchUsers()
-      setIsAddDialogOpen(false)
-      resetForm()
-    } catch (error) {
-      console.error("Error creating user:", error)
     }
   }
 
-  const handleEditUser = async () => {
-    if (!selectedUser) {
-      return
-    }
-
-    try {
-      await userApi.update(selectedUser.id, {
-        name: editFormData.name?.trim() || undefined,
-        role: editFormData.role,
-        isActive: editFormData.isActive,
-      })
-      await fetchUsers()
-      setIsEditDialogOpen(false)
-      resetEditForm()
-    } catch (error) {
-      console.error("Error updating user:", error)
-    }
-  }
-
-  const openEditDialog = (user: User) => {
-    setSelectedUser(user)
-    setEditFormData({
-      name: user.name || "",
-      role: user.role,
-      isActive: user.isActive,
-    })
-    setIsEditDialogOpen(true)
-  }
-
-  const resetForm = () => {
-    setFormData({
-      email: "",
-      password: "",
-      name: "",
-      role: "ADMIN",
-    })
-  }
-
-  const resetEditForm = () => {
+  const handleCreateUser = () => {
     setSelectedUser(null)
-    setEditFormData({
-      name: "",
-      role: "ADMIN",
-      isActive: true,
-    })
+    setIsModalOpen(true)
+  }
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user)
+    setIsModalOpen(true)
   }
 
   const stats = {
@@ -179,51 +113,26 @@ export default function UsersPage() {
 
   if (loading && users.length === 0) {
     return (
-      <ProtectedLayout>
+      <div className="p-6">
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-cyan-600" />
         </div>
-      </ProtectedLayout>
+      </div>
     )
   }
 
   return (
-    <ProtectedLayout>
+    <div className="p-6">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-1">Manage all system users and their permissions</p>
           </div>
-          <Dialog
-            open={isAddDialogOpen}
-            onOpenChange={(open) => {
-              setIsAddDialogOpen(open)
-              if (open) {
-                resetForm()
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add New User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>Enter user details to add to the system</DialogDescription>
-              </DialogHeader>
-              <UserForm formData={formData} setFormData={setFormData} roleOptions={roleOptions} />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddUser} className="bg-blue-600">
-                  Add User
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleCreateUser}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add New User
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -300,7 +209,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}>
+                        <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -362,155 +271,12 @@ export default function UsersPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Dialog
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          setIsEditDialogOpen(open)
-          if (!open) {
-            resetEditForm()
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user details and permissions</DialogDescription>
-          </DialogHeader>
-          <EditUserForm
-            formData={editFormData}
-            setFormData={setEditFormData}
-            roleOptions={roleOptions}
-            selectedUser={selectedUser}
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditUser} className="bg-blue-600">
-              Update User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </ProtectedLayout>
-  )
-}
-
-function UserForm({
-  formData,
-  setFormData,
-  roleOptions,
-}: {
-  formData: CreateUserData
-  setFormData: React.Dispatch<React.SetStateAction<CreateUserData>>
-  roleOptions: string[]
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2">
-        <Label>Email *</Label>
-        <Input
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          placeholder="user@echannelling.lk"
-          autoComplete="off"
-        />
-      </div>
-      <div className="col-span-2">
-        <Label>Password *</Label>
-        <Input
-          type="password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          placeholder="At least 8 characters"
-          autoComplete="new-password"
-        />
-      </div>
-      <div>
-        <Label>Name</Label>
-        <Input
-          value={formData.name || ""}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Jane Doe"
-        />
-      </div>
-      <div>
-        <Label>Role</Label>
-        <Select
-          value={formData.role || ""}
-          onValueChange={(value) => setFormData({ ...formData, role: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roleOptions.map((role) => (
-              <SelectItem key={role} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  )
-}
-
-function EditUserForm({
-  formData,
-  setFormData,
-  roleOptions,
-  selectedUser,
-}: {
-  formData: UpdateUserData
-  setFormData: React.Dispatch<React.SetStateAction<UpdateUserData>>
-  roleOptions: string[]
-  selectedUser: User | null
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2">
-        <Label>Email</Label>
-        <Input
-          type="email"
-          value={selectedUser?.email || ""}
-          readOnly
-          disabled
-        />
-      </div>
-      <div>
-        <Label>Name</Label>
-        <Input
-          value={formData.name || ""}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Jane Doe"
-        />
-      </div>
-      <div>
-        <Label>Role</Label>
-        <Select
-          value={formData.role || ""}
-          onValueChange={(value) => setFormData({ ...formData, role: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roleOptions.map((role) => (
-              <SelectItem key={role} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={!!formData.isActive}
-          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-        />
-        <Label>Active Status</Label>
-      </div>
+      <UserModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        user={selectedUser}
+        onSuccess={() => fetchUsers()}
+      />
     </div>
   )
 }

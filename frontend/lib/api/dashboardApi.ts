@@ -7,97 +7,144 @@ if (!API_BASE_URL) {
   throw new Error('NEXT_PUBLIC_API_URL environment variable is not set')
 }
 
+// Types based on the backend response
+export interface DashboardStatsResponse {
+  users: number
+  appointments: number
+  doctors: number
+  hospitals: number
+  revenue: number
+  transactions: number
+  recentNotifications: {
+    id: string
+    type: string
+    title: string
+    message: string
+    timestamp: string
+    read: boolean
+    user: string
+  }[]
+}
+
+export interface AnalyticsResponse {
+  chartData: {
+    name: string
+    revenue: number
+    transactions: number
+  }[]
+  summary: {
+    totalRevenue: number
+    totalTransactions: number
+  }
+}
+
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
     try {
-      // Fetch real doctor and hospital counts
-      const [doctorsResponse, hospitalsResponse] = await Promise.all([
-        doctorApi.getAll().catch(() => []),
-        hospitalApi.getAll().catch(() => [])
-      ])
-
-      const doctorCount = Array.isArray(doctorsResponse) ? doctorsResponse.length : 0
-      const hospitalCount = Array.isArray(hospitalsResponse) ? hospitalsResponse.length : 0
-
-      // Try to get additional stats from backend if available
-      let backendStats: {
-        hospitals?: number;
-        doctors?: number;
-        transactions?: number;
-        revenue?: number;
-      } = {}
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (response.ok) {
-          backendStats = await response.json()
-        }
-      } catch (error) {
-        console.log('Backend stats not available, using API counts')
-      }
-      
-      // Return real counts with backend data or fallbacks
-      return {
-        hospitals: backendStats.hospitals || hospitalCount,
-        doctors: backendStats.doctors || doctorCount,
-        transactions: backendStats.transactions || 12584,
-        revenue: backendStats.revenue || 2400000,
-        changes: {
-          hospitals: Math.floor((backendStats.hospitals || hospitalCount) * 0.1),
-          doctors: Math.floor((backendStats.doctors || doctorCount) * 0.07),
-          transactions: Math.floor((backendStats.transactions || 12584) * 0.18),
-          revenue: Math.floor((backendStats.revenue || 2400000) * 0.15),
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
         },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats')
+      }
+
+      const data = await response.json()
+      const stats: DashboardStatsResponse = data.data || data
+
+      // Add changes percentage (mocked for now as backend doesn't provide historical comparison yet)
+      const changes = {
+        hospitals: 5,
+        doctors: 12,
+        transactions: 8,
+        revenue: 15
+      }
+
+      return {
+        hospitals: stats.hospitals,
+        doctors: stats.doctors,
+        transactions: stats.transactions,
+        revenue: stats.revenue,
+        changes,
       }
     } catch (error) {
       console.error('Dashboard stats error:', error)
-      // Final fallback with mock data
-      return {
-        hospitals: 47,
-        doctors: 382,
-        transactions: 12584,
-        revenue: 2400000,
-        changes: {
-          hospitals: 5,
-          doctors: 28,
-          transactions: 2340,
-          revenue: 380000,
-        },
-      }
+      throw error
     }
   },
 
   getChartData: async (): Promise<ChartDataPoint[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/analytics?timeframe=year`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-    return [
-      { month: "Jan", web: 40000, telco: 32000, agent: 28000 },
-      { month: "Feb", web: 45000, telco: 35000, agent: 31000 },
-      { month: "Mar", web: 52000, telco: 38000, agent: 34000 },
-      { month: "Apr", web: 48000, telco: 36000, agent: 32000 },
-      { month: "May", web: 61000, telco: 42000, agent: 38000 },
-      { month: "Jun", web: 55000, telco: 40000, agent: 36000 },
-    ]
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
+
+      const data = await response.json()
+      const analytics: AnalyticsResponse = data.data || data
+
+      // Map backend data to frontend chart format
+      return analytics.chartData.map(item => ({
+        month: item.name,
+        web: item.revenue, // Using 'web' as primary revenue metric for the chart
+        telco: item.transactions * 100, // visualizing transactions on same scale
+        agent: item.revenue * 0.4 // Mock split
+      }))
+    } catch (error) {
+      console.error('Chart data error:', error)
+      // Fallback to empty data to prevent crash
+      return []
+    }
   },
 
   getReconciliationData: async (): Promise<ReconciliationData[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    // This endpoint wasn't in the original backend service, keep as is or connect to invoices stats if appropriate
+    // Connecting to invoice stats as a proxy for reconciliation status
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/invoices/stats`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-    return [
-      { name: "Reconciled", value: 8540, color: "#22C55E" },
-      { name: "Pending", value: 1240, color: "#F59E0B" },
-      { name: "Failed", value: 340, color: "#EF4444" },
-    ]
+      if (response.ok) {
+        const data = await response.json()
+        const stats = data.data || data
+        return [
+          { name: "Reconciled", value: stats.paid || 0, color: "#22C55E" }, // Paid as Reconciled
+          { name: "Pending", value: stats.pending || 0, color: "#F59E0B" },
+          { name: "Failed", value: 0, color: "#EF4444" }, // No failed status in invoice stats yet
+        ]
+      }
+      throw new Error('Failed to fetch invoice stats')
+    } catch (error) {
+      console.error('Reconciliation data error', error)
+      return [
+        { name: "Reconciled", value: 0, color: "#22C55E" },
+        { name: "Pending", value: 0, color: "#F59E0B" },
+        { name: "Failed", value: 0, color: "#EF4444" },
+      ]
+    }
   },
 
   getNotifications: async (): Promise<Notification[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+      // Use the generic stats endpoint which includes recent notifications
+      // effectively getting 2-in-1, or call specific notification endpoint
+      // Let's call the generic stats endpoint again or better, just reuse the logic if we already fetched it.
+      // But typically this is called separately.
+
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json',
@@ -109,57 +156,42 @@ export const dashboardApi = {
       }
 
       const data = await response.json()
-      return data
+      const stats: DashboardStatsResponse = data.data || data
+
+      return stats.recentNotifications.map(n => ({
+        id: n.id,
+        type: n.type as any, // assuming type matches or needs mapping
+        title: n.title,
+        message: n.message,
+        timestamp: new Date(n.timestamp),
+        read: n.read,
+        icon: n.type === 'alert' || n.type === 'error' ? 'AlertCircle' :
+          n.type === 'success' ? 'CheckCircle' : 'Info'
+      }))
     } catch (error) {
       console.error('Notifications error:', error)
-      // Fallback to mock data
-      return [
-        {
-          id: "1",
-          type: "alert",
-          title: "High Transaction Volume",
-          message: "Exceeded 500 transactions in last hour",
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          read: false,
-          icon: "AlertCircle",
+      return []
+    }
+  },
+
+  getRecentActivity: async (): Promise<any[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/recent-activity?limit=10`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
         },
-        {
-          id: "2",
-          type: "success",
-          title: "Payment Reconciliation Complete",
-          message: "Successfully reconciled 145 payments",
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-          read: true,
-          icon: "CheckCircle",
-        },
-        {
-          id: "3",
-          type: "error",
-          title: "Failed Transaction Alert",
-          message: "12 transactions failed in last 30 minutes",
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          read: false,
-          icon: "AlertTriangle",
-        },
-        {
-          id: "4",
-          type: "info",
-          title: "New Doctor Registration",
-          message: "Dr. Perera has been registered successfully",
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          read: true,
-          icon: "Bell",
-        },
-        {
-          id: "5",
-          type: "info",
-          title: "System Maintenance Scheduled",
-          message: "Scheduled maintenance on Sunday 2 AM - 4 AM",
-          timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-          read: true,
-          icon: "Info",
-        },
-      ]
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recent activity')
+      }
+
+      const data = await response.json()
+      return data.data || data
+    } catch (error) {
+      console.error('Recent activity error:', error)
+      return []
     }
   },
 }

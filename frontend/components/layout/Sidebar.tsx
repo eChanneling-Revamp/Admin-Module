@@ -153,11 +153,11 @@ const menuItems: MenuItem[] = [
       { title: "Security Events", href: "/dashboard/audit-logs/security" },
     ],
   },
-  // {
-  //   title: "Invoices",
-  //   icon: <FileText className="w-5 h-5" />,
-  //   href: "/dashboard/invoices",
-  // },
+  {
+    title: "Invoices",
+    icon: <FileText className="w-5 h-5" />,
+    href: "/dashboard/invoices",
+  },
   {
     title: "Settings",
     icon: <Settings className="w-5 h-5" />,

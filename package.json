@@ -14,6 +14,8 @@
     "test": "npm run test --workspaces --if-present"
   },
   "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "14.2.33",
+    "@next/swc-linux-x64-musl": "14.2.33",
     "@tailwindcss/oxide-linux-x64-gnu": "4.1.16",
     "@tailwindcss/oxide-linux-x64-musl": "4.1.16",
     "lightningcss-linux-x64-gnu": "^1.30.2",

@@ -27,6 +27,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { paymentApi, PaymentStatistics, Transaction } from '@/lib/api/paymentApi';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -64,6 +65,9 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [paymentStats, setPaymentStats] = useState<PaymentStatistics | null>(null);
+  const [recentPayments, setRecentPayments] = useState<Transaction[]>([]);
+  const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
 
   const getAuthToken = () => localStorage.getItem('auth_token');
 
@@ -79,14 +83,15 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
         'Content-Type': 'application/json',
       };
 
-      // Fetch all data in parallel
-      // Fetch all data in parallel
-      const [statsRes, invoiceRes, doctorsRes, patientsRes, hospitalsRes] = await Promise.all([
+      // Fetch all dashboard modules in parallel, including payment API data.
+      const [statsRes, invoiceRes, doctorsRes, patientsRes, hospitalsRes, paymentStatsRes, paymentTransactionsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/dashboard/stats`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/dashboard/invoices/stats`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/doctors`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/users?role=PATIENT`, { headers }).catch(() => null),
         fetch(`${API_BASE_URL}/api/hospitals`, { headers }).catch(() => null),
+        paymentApi.getPaymentStatistics().catch(() => null),
+        paymentApi.getPayments({ page: 1, limit: 5, sortBy: 'createdAt', sortOrder: 'desc' }).catch(() => null),
       ]);
 
       // Process dashboard stats
@@ -118,6 +123,27 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
         const data = await hospitalsRes.json();
         setHospitals(Array.isArray(data) ? data : data.data || []);
       }
+
+      const hasPaymentStats = Boolean(paymentStatsRes?.success);
+      const hasPaymentTransactions = Boolean(paymentTransactionsRes?.success);
+
+      if (hasPaymentStats) {
+        setPaymentStats(paymentStatsRes?.data || null);
+      } else {
+        setPaymentStats(null);
+      }
+
+      if (hasPaymentTransactions) {
+        setRecentPayments(paymentTransactionsRes?.data || []);
+      } else {
+        setRecentPayments([]);
+      }
+
+      setPaymentLoadError(
+        hasPaymentStats || hasPaymentTransactions
+          ? null
+          : 'Payment API data is currently unavailable.'
+      );
 
 
 
@@ -201,9 +227,40 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
     return `Rs. ${amount.toLocaleString()}`;
   };
 
+  const formatPaymentMethod = (method: string) => {
+    if (!method) return 'Unknown';
+    return method
+      .toLowerCase()
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  };
+
+  const getPaymentStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'default';
+      case 'FAILED':
+      case 'CANCELLED':
+        return 'destructive';
+      case 'REFUNDED':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
   // Get appointment count from database stats or direct array
   const appointmentCount = dashboardStats?.appointments || appointments.length;
   const patientCount = patients.length > 0 ? patients.length : 10; // Use hardcoded count if no real data
+  const paymentTransactionCount = paymentStats?.totalTransactions || 0;
+  const completedPaymentCount = paymentStats?.byStatus?.COMPLETED?.count || 0;
+  const failedPaymentCount = paymentStats?.byStatus?.FAILED?.count || 0;
+  const pendingPaymentCount = (paymentStats?.byStatus?.PENDING?.count || 0) + (paymentStats?.byStatus?.UNPAID?.count || 0);
+  const paymentSuccessRate = paymentTransactionCount > 0
+    ? ((completedPaymentCount / paymentTransactionCount) * 100).toFixed(1)
+    : '0.0';
+  const paymentRevenue = paymentStats?.completedAmount ?? invoiceStats?.revenue ?? dashboardStats?.revenue ?? 0;
 
   // Stats data - using real data
   const stats = [
@@ -228,10 +285,10 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
       textColor: 'text-teal-600'
     },
     {
-      title: 'Total Revenue',
-      value: formatCurrency(invoiceStats?.revenue || dashboardStats?.revenue || 0),
-      change: '+15.3%',
-      trend: 'up',
+      title: 'Payment Revenue',
+      value: formatCurrency(paymentRevenue),
+      change: `${paymentSuccessRate}% success`,
+      trend: Number(paymentSuccessRate) >= 70 ? 'up' : 'down',
       icon: DollarSign,
       gradient: 'from-blue-500 to-cyan-500',
       lightColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
@@ -449,6 +506,91 @@ export const DashboardContent: FC<DashboardContentProps> = () => {
                   {action.label}
                 </button>
               ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="lg:col-span-2 border-0 shadow-sm">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-blue-600" />
+                  Payment Overview
+                </CardTitle>
+                <CardDescription>Live payment metrics from the integrated payment API</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-600"
+                onClick={() => router.push('/dashboard/payments')}
+              >
+                View Payments <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100/60">
+                  <p className="text-xs text-gray-500">Transactions</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{paymentTransactionCount}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/60">
+                  <p className="text-xs text-gray-500">Success Rate</p>
+                  <p className="text-2xl font-bold text-emerald-700 mt-1">{paymentSuccessRate}%</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/60">
+                  <p className="text-xs text-gray-500">Pending</p>
+                  <p className="text-2xl font-bold text-amber-700 mt-1">{pendingPaymentCount}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100/60">
+                  <p className="text-xs text-gray-500">Failed</p>
+                  <p className="text-2xl font-bold text-rose-700 mt-1">{failedPaymentCount}</p>
+                </div>
+              </div>
+              {paymentLoadError && (
+                <p className="text-sm text-amber-700 mt-4">{paymentLoadError}</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">Recent Payments</CardTitle>
+              <CardDescription>Latest transactions from payment API</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentPayments.length > 0 ? recentPayments.map((payment) => (
+                  <div key={payment.id} className="p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {payment.transactionId || payment.id.slice(0, 12)}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {payment.bookingId || payment.userId || 'No reference'}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(Number(payment.amount))}</p>
+                        <p className="text-xs text-gray-400">{formatTimeAgo(payment.createdAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="outline" className="text-[10px]">
+                        {formatPaymentMethod(payment.paymentMethod)}
+                      </Badge>
+                      <Badge variant={getPaymentStatusVariant(payment.status)} className="text-[10px]">
+                        {payment.sourceStatus || payment.status}
+                      </Badge>
+                    </div>
+                  </div>
+                )) : (
+                  <p className="text-sm text-gray-500 text-center py-4">No payment transactions available</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

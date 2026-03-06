@@ -90,16 +90,16 @@ const menuItems: MenuItem[] = [
   //     { title: "Branch Performance", href: "/dashboard/branch-performance" },
   //   ],
   // },
-  {
-    title: "Fee & Discounts",
-    icon: <Tags className="w-5 h-5" />,
-    children: [
-      { title: "Hospital Fees", href: "/dashboard/hospital-fees" },
-      { title: "Platform Fees", href: "/dashboard/platform-fees" },
-      { title: "Discount Codes", href: "/dashboard/discounts" },
-      // { title: "Bulk Fee Updates", href: "/dashboard/bulk-fees" },
-    ],
-  },
+  // {
+  //   title: "Fee & Discounts",
+  //   icon: <Tags className="w-5 h-5" />,
+  //   children: [
+  //     { title: "Hospital Fees", href: "/dashboard/hospital-fees" },
+  //     { title: "Platform Fees", href: "/dashboard/platform-fees" },
+  //     { title: "Discount Codes", href: "/dashboard/discounts" },
+  //     // { title: "Bulk Fee Updates", href: "/dashboard/bulk-fees" },
+  //   ],
+  // },
   // {
   //   title: "Corporate Accounts",
   //   icon: <Building className="w-5 h-5" />,
@@ -110,17 +110,16 @@ const menuItems: MenuItem[] = [
   //     { title: "Credit Management", href: "/dashboard/credit-management" },
   //   ],
   // },
-  // {
-  //   title: "Payments",
-  //   icon: <CreditCard className="w-5 h-5" />,
-  //   badge: "3",
-  //   children: [
-  //     { title: "All Transactions", href: "/dashboard/payments" },
-  //     { title: "Reconciliation", href: "/dashboard/reconciliation" },
-  //     { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
-  //     { title: "Refunds", href: "/dashboard/refunds" },
-  //   ],
-  // },
+  {
+    title: "Payments",
+    icon: <CreditCard className="w-5 h-5" />,
+    children: [
+      { title: "All Transactions", href: "/dashboard/payments" },
+      { title: "Reconciliation", href: "/dashboard/reconciliation" },
+      { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
+      { title: "Refunds", href: "/dashboard/refunds" },
+    ],
+  },
   {
     title: "Reports",
     icon: <BarChart3 className="w-5 h-5" />,

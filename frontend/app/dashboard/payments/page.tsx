@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Download, RefreshCw, ChevronLeft, ChevronRight, Eye, RotateCcw, CreditCard, Loader2 } from "lucide-react"
-import { adminPaymentService, Transaction, PaymentStatistics, PaymentStatus, PaymentMethod } from "@/lib/adminPaymentService"
+import { paymentApi, Transaction, PaymentStatistics, PaymentStatus, PaymentMethod } from "@/lib/api/paymentApi"
 import { useToast } from "@/hooks/use-toast"
 
 export default function PaymentsPage() {
@@ -24,10 +24,18 @@ export default function PaymentsPage() {
   const [totalRecords, setTotalRecords] = useState(0)
   const limit = 10
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true)
-      const params: any = {
+      const params: {
+        page: number
+        limit: number
+        sortBy: "createdAt"
+        sortOrder: "desc"
+        searchTerm?: string
+        status?: PaymentStatus
+        paymentMethod?: PaymentMethod
+      } = {
         page: currentPage,
         limit,
         sortBy: 'createdAt',
@@ -38,11 +46,15 @@ export default function PaymentsPage() {
       if (statusFilter !== "all") params.status = statusFilter as PaymentStatus
       if (methodFilter !== "all") params.paymentMethod = methodFilter as PaymentMethod
 
-      const response = await adminPaymentService.searchTransactions(params)
+      const response = await paymentApi.getPayments(params, { forceRefresh })
       setTransactions(response.data)
       setTotalPages(response.pagination.totalPages)
       setTotalRecords(response.pagination.total)
+      setCurrentPage(response.pagination.page)
     } catch (error: any) {
+      setTransactions([])
+      setTotalPages(1)
+      setTotalRecords(0)
       toast({
         title: "Error",
         description: error.message || "Failed to fetch transactions",
@@ -53,9 +65,9 @@ export default function PaymentsPage() {
     }
   }, [currentPage, searchTerm, statusFilter, methodFilter, toast])
 
-  const fetchStatistics = useCallback(async () => {
+  const fetchStatistics = useCallback(async (forceRefresh = false) => {
     try {
-      const response = await adminPaymentService.getPaymentStatistics()
+      const response = await paymentApi.getPaymentStatistics({ forceRefresh })
       setStatistics(response.data)
     } catch (error: any) {
       console.error("Failed to fetch statistics:", error)
@@ -64,31 +76,66 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetchTransactions()
+  }, [fetchTransactions])
+
+  useEffect(() => {
     fetchStatistics()
-  }, [fetchTransactions, fetchStatistics])
+  }, [fetchStatistics])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(1)
-    fetchTransactions()
+  }
+
+  const handleRefresh = async () => {
+    await Promise.all([fetchTransactions(true), fetchStatistics(true)])
   }
 
   const handleExport = async () => {
     try {
-      const today = new Date()
-      const startDate = new Date(today.setMonth(today.getMonth() - 1)).toISOString()
-      const endDate = new Date().toISOString()
-      
-      await adminPaymentService.generateReport({
-        reportType: 'CUSTOM_RANGE',
-        startDate,
-        endDate,
-        format: 'CSV'
-      })
+      const exportParams: {
+        page: number
+        limit: number
+        sortBy: "createdAt"
+        sortOrder: "desc"
+        searchTerm?: string
+        status?: PaymentStatus
+        paymentMethod?: PaymentMethod
+      } = {
+        page: 1,
+        limit: 100_000,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+
+      if (searchTerm) exportParams.searchTerm = searchTerm
+      if (statusFilter !== "all") exportParams.status = statusFilter as PaymentStatus
+      if (methodFilter !== "all") exportParams.paymentMethod = methodFilter as PaymentMethod
+
+      const response = await paymentApi.getPayments(exportParams)
+
+      if (response.data.length === 0) {
+        toast({
+          title: "No Data",
+          description: "There are no records to export for the selected filters.",
+        })
+        return
+      }
+
+      const csv = paymentApi.generateCsv(response.data)
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `payments-${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
       
       toast({
-        title: "Export Started",
-        description: "Your report is being generated",
+        title: "Export Complete",
+        description: `Downloaded ${response.data.length} payment records.`,
       })
     } catch (error: any) {
       toast({
@@ -116,6 +163,7 @@ export default function PaymentsPage() {
     switch (status) {
       case 'COMPLETED': return 'default'
       case 'PENDING': return 'secondary'
+      case 'UNPAID': return 'secondary'
       case 'FAILED': return 'destructive'
       case 'REFUNDED': return 'outline'
       case 'CANCELLED': return 'destructive'
@@ -129,7 +177,8 @@ export default function PaymentsPage() {
       'DEBIT_CARD': 'Debit Card',
       'BANK_TRANSFER': 'Bank Transfer',
       'CASH': 'Cash',
-      'MOBILE_PAYMENT': 'Mobile Payment'
+      'MOBILE_PAYMENT': 'Mobile Payment',
+      'OTHER': 'Other'
     }
     return labels[method] || method
   }
@@ -150,7 +199,7 @@ export default function PaymentsPage() {
             <p className="text-gray-600 mt-1">Monitor all payment activities and transactions</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { fetchTransactions(); fetchStatistics(); }}>
+            <Button variant="outline" onClick={handleRefresh}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -250,6 +299,7 @@ export default function PaymentsPage() {
                     <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
                     <SelectItem value="CASH">Cash</SelectItem>
                     <SelectItem value="MOBILE_PAYMENT">Mobile Payment</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -276,7 +326,6 @@ export default function PaymentsPage() {
                       <TableHead>Payment Method</TableHead>
                       <TableHead>Date & Time</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -286,7 +335,7 @@ export default function PaymentsPage() {
                           {payment.transactionId || payment.id.slice(0, 12)}
                         </TableCell>
                         <TableCell className="font-medium">
-                          {payment.appointment?.appointmentNumber || '-'}
+                          {payment.bookingId || payment.appointment?.appointmentNumber || '-'}
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(Number(payment.amount))}
@@ -299,20 +348,8 @@ export default function PaymentsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(payment.status)}>
-                            {payment.status}
+                            {payment.sourceStatus || payment.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button variant="outline" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {payment.status === 'COMPLETED' && (
-                              <Button variant="outline" size="sm" title="Initiate Refund">
-                                <RotateCcw className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "prisma generate && node -e \"const fs = require('fs'); const path = require('path'); if (!fs.existsSync('dist')) fs.mkdirSync('dist'); if (!fs.existsSync('dist/api')) fs.mkdirSync('dist/api'); const copyDir = (src, dest) => { fs.mkdirSync(dest, { recursive: true }); const entries = fs.readdirSync(src, { withFileTypes: true }); for (let entry of entries) { const srcPath = path.join(src, entry.name); const destPath = path.join(dest, entry.name); if (entry.isDirectory()) { copyDir(srcPath, destPath); } else { fs.copyFileSync(srcPath, destPath); } } }; copyDir('src', 'dist'); fs.copyFileSync('api/index.ts', 'dist/api/index.ts'); fs.copyFileSync('package.json', 'dist/package.json');\"",
-    "predev": "prisma generate",
+    "predev": "node scripts/ensure-prisma-client.js",
     "start": "ts-node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
     "test": "jest",

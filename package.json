@@ -1,0 +1,11 @@
+{
+  "name": "admin-module",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "Backend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace frontend"
+  }
+}

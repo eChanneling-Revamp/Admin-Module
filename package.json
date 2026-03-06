@@ -6,12 +6,16 @@
     "Backend"
   ],
   "scripts": {
-    "build": "npm run build --workspace frontend"
-  },
-  "devDependencies": {
-    "next": "^14.2.25"
+    "build": "npm run build --workspace frontend",
+    "build:all": "npm run build --workspaces --if-present",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run dev --workspace Backend",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "4.1.16",
+    "@tailwindcss/oxide-linux-x64-musl": "4.1.16",
     "lightningcss-linux-x64-gnu": "^1.30.2",
     "lightningcss-linux-x64-musl": "^1.30.2"
   }

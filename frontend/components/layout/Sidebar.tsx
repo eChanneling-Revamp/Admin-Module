@@ -115,9 +115,9 @@ const menuItems: MenuItem[] = [
     icon: <CreditCard className="w-5 h-5" />,
     children: [
       { title: "All Transactions", href: "/dashboard/payments" },
-      { title: "Reconciliation", href: "/dashboard/reconciliation" },
-      { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
-      { title: "Refunds", href: "/dashboard/refunds" },
+      // { title: "Reconciliation", href: "/dashboard/reconciliation" },
+      // { title: "Failed Payments", href: "/dashboard/failed-payments", badge: "3" },
+      // { title: "Refunds", href: "/dashboard/refunds" },
     ],
   },
   {
@@ -132,17 +132,17 @@ const menuItems: MenuItem[] = [
       // { title: "Custom Reports", href: "/dashboard/reports/custom" },
     ],
   },
-  // {
-  //   title: "Integrations",
-  //   icon: <Plug className="w-5 h-5" />,
-  //   children: [
-  //     { title: "Hospital APIs", href: "/dashboard/integrations/hospitals" },
-  //     { title: "Payment Gateways", href: "/dashboard/integrations/payments" },
-  //     { title: "SMS Providers", href: "/dashboard/integrations/sms" },
-  //     { title: "Email Services", href: "/dashboard/integrations/email" },
-  //     { title: "API Keys", href: "/dashboard/integrations/api-keys" },
-  //   ],
-  // },
+  {
+    title: "Integrations",
+    icon: <Plug className="w-5 h-5" />,
+    children: [
+      // { title: "Hospital APIs", href: "/dashboard/integrations/hospitals" },
+      { title: "Payment Gateways", href: "/dashboard/integrations/payments" },
+      // { title: "SMS Providers", href: "/dashboard/integrations/sms" },
+      // { title: "Email Services", href: "/dashboard/integrations/email" },
+      // { title: "API Keys", href: "/dashboard/integrations/api-keys" },
+    ],
+  },
   {
     title: "Audit Logs",
     icon: <Shield className="w-5 h-5" />,

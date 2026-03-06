@@ -1,5 +1,23 @@
 const DEFAULT_PAYMENT_API_URL = "/payment/api/v1/payments/"
-const PAYMENT_API_URL = (process.env.NEXT_PUBLIC_PAYMENT_API_URL || DEFAULT_PAYMENT_API_URL).trim()
+const HEALTH_LIVE_PATH = "/payment/api/v1/health/live"
+const HEALTH_PATH = "/payment/api/v1/health"
+
+const normalizePaymentApiUrl = (value: string): string => {
+	const trimmedValue = value.trim()
+	if (!trimmedValue) {
+		return DEFAULT_PAYMENT_API_URL
+	}
+
+	try {
+		const parsed = new URL(trimmedValue)
+		const normalizedPath = `${parsed.pathname}${parsed.search}`
+		return normalizedPath || DEFAULT_PAYMENT_API_URL
+	} catch {
+		return trimmedValue
+	}
+}
+
+const PAYMENT_API_URL = normalizePaymentApiUrl(process.env.NEXT_PUBLIC_PAYMENT_API_URL || DEFAULT_PAYMENT_API_URL)
 const PAYMENT_CACHE_TTL_MS = 30_000
 
 type JsonObject = Record<string, unknown>
@@ -73,6 +91,31 @@ export interface SingleResponse<T> {
 	success: boolean
 	data: T
 	message?: string
+}
+
+export interface PaymentServiceHealth {
+	status: string
+	timestamp: string
+	uptime: number
+	service?: string
+	version?: string
+}
+
+export interface HealthProbeResult {
+	ok: boolean
+	endpoint: string
+	latencyMs: number | null
+	data: PaymentServiceHealth | null
+	error: string | null
+}
+
+export interface PayHereIntegrationStatus {
+	gateway: "PayHere"
+	connected: boolean
+	checkedAt: string
+	message: string
+	live: HealthProbeResult
+	health: HealthProbeResult
 }
 
 interface RawPaymentRecord {
@@ -313,6 +356,89 @@ const getAuthHeaders = (): HeadersInit => {
 	}
 }
 
+const getHealthHeaders = (): HeadersInit => {
+	return {
+		Accept: "application/json",
+	}
+}
+
+const toPaymentServiceHealth = (payload: unknown): PaymentServiceHealth => {
+	if (!isObject(payload)) {
+		throw new Error("Unexpected health response format")
+	}
+
+	const status = normalizeText(typeof payload.status === "string" ? payload.status : "")
+	const timestamp = normalizeText(typeof payload.timestamp === "string" ? payload.timestamp : "")
+	const uptime =
+		typeof payload.uptime === "number"
+			? payload.uptime
+			: typeof payload.uptime === "string"
+				? Number(payload.uptime)
+				: NaN
+
+	if (!status || !timestamp || !Number.isFinite(uptime)) {
+		throw new Error("Health response is missing required fields")
+	}
+
+	const service = normalizeText(typeof payload.service === "string" ? payload.service : "") || undefined
+	const version = normalizeText(typeof payload.version === "string" ? payload.version : "") || undefined
+
+	return {
+		status,
+		timestamp,
+		uptime,
+		service,
+		version,
+	}
+}
+
+const probeHealthEndpoint = async (endpoint: string): Promise<HealthProbeResult> => {
+	const startedAt = Date.now()
+
+	try {
+		const response = await fetch(endpoint, {
+			method: "GET",
+			headers: getHealthHeaders(),
+		})
+
+		const latencyMs = Date.now() - startedAt
+		const responseText = await response.text()
+		let payload: unknown = {}
+
+		if (responseText.trim()) {
+			try {
+				payload = JSON.parse(responseText)
+			} catch {
+				if (!response.ok) {
+					throw new Error(responseText || `Health check failed (${response.status})`)
+				}
+				throw new Error("Health endpoint returned an invalid JSON response")
+			}
+		}
+
+		if (!response.ok) {
+			const message = extractMessage(payload) || `Health check failed (${response.status})`
+			throw new Error(message)
+		}
+
+		return {
+			ok: true,
+			endpoint,
+			latencyMs,
+			data: toPaymentServiceHealth(payload),
+			error: null,
+		}
+	} catch (error) {
+		return {
+			ok: false,
+			endpoint,
+			latencyMs: Date.now() - startedAt,
+			data: null,
+			error: error instanceof Error ? error.message : "Health endpoint check failed",
+		}
+	}
+}
+
 const getCachedPayments = (forceRefresh: boolean): Transaction[] | null => {
 	if (forceRefresh) {
 		return null
@@ -543,6 +669,78 @@ export const paymentApi = {
 		return {
 			success: true,
 			data: calculateStatistics(payments),
+		}
+	},
+
+	getServiceHealthLive: async (): Promise<SingleResponse<PaymentServiceHealth>> => {
+		const probe = await probeHealthEndpoint(HEALTH_LIVE_PATH)
+
+		if (!probe.ok || !probe.data) {
+			throw new Error(probe.error || "Failed to check payment live health")
+		}
+
+		return {
+			success: true,
+			data: probe.data,
+		}
+	},
+
+	getServiceHealth: async (): Promise<SingleResponse<PaymentServiceHealth>> => {
+		const probe = await probeHealthEndpoint(HEALTH_PATH)
+
+		if (!probe.ok || !probe.data) {
+			throw new Error(probe.error || "Failed to check payment service health")
+		}
+
+		return {
+			success: true,
+			data: probe.data,
+		}
+	},
+
+	checkPayHereIntegration: async (): Promise<PayHereIntegrationStatus> => {
+		const [liveProbe, healthProbe] = await Promise.all([
+			probeHealthEndpoint(HEALTH_LIVE_PATH),
+			probeHealthEndpoint(HEALTH_PATH),
+		])
+
+		const liveStatus = normalizeKey(liveProbe.data?.status)
+		const healthStatus = normalizeKey(healthProbe.data?.status)
+		const isLiveAlive = liveProbe.ok && liveStatus === "ALIVE"
+		const isHealthOk = healthProbe.ok && healthStatus === "OK"
+		const connected = isLiveAlive && isHealthOk
+
+		let message = "PayHere integration check failed."
+
+		if (connected) {
+			message = "PayHere integration is healthy and reachable."
+		} else {
+			const errors: string[] = []
+
+			if (!liveProbe.ok) {
+				errors.push(`Live probe error: ${liveProbe.error}`)
+			} else if (!isLiveAlive) {
+				errors.push(`Live status is '${liveProbe.data?.status ?? "unknown"}'`)
+			}
+
+			if (!healthProbe.ok) {
+				errors.push(`Health probe error: ${healthProbe.error}`)
+			} else if (!isHealthOk) {
+				errors.push(`Health status is '${healthProbe.data?.status ?? "unknown"}'`)
+			}
+
+			if (errors.length > 0) {
+				message = errors.join(" | ")
+			}
+		}
+
+		return {
+			gateway: "PayHere",
+			connected,
+			checkedAt: new Date().toISOString(),
+			message,
+			live: liveProbe,
+			health: healthProbe,
 		}
 	},
 

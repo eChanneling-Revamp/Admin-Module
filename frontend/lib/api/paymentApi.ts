@@ -120,19 +120,28 @@ export interface PayHereIntegrationStatus {
 
 interface RawPaymentRecord {
 	id: string
+	paymentId?: string | null
 	bookingId?: string | null
+	appointmentId?: string | null
 	userId?: string | null
 	amount?: string | number | null
 	currency?: string | null
 	psp?: string | null
+	gateway?: string | null
+	provider?: string | null
 	pspPaymentId?: string | null
 	pspReference?: string | null
 	paymentMethod?: string | null
+	method?: string | null
 	status?: string | null
+	paymentStatus?: string | null
 	metadata?: PaymentMetadata | null
 	createdAt?: string | null
+	created_at?: string | null
 	updatedAt?: string | null
+	updated_at?: string | null
 	expiresAt?: string | null
+	expires_at?: string | null
 }
 
 let paymentsCache: Transaction[] | null = null
@@ -171,11 +180,28 @@ const parseTime = (value: string): number => {
 }
 
 const toRawRecord = (value: unknown): RawPaymentRecord | null => {
-	if (!isObject(value) || typeof value.id !== "string") {
+	if (!isObject(value)) {
 		return null
 	}
 
-	return value as unknown as RawPaymentRecord
+	const record = value as unknown as RawPaymentRecord
+	const recordIdCandidates = [
+		record.id,
+		record.paymentId,
+		record.transactionId,
+		record.pspPaymentId,
+		record.pspReference,
+	]
+	const resolvedId = recordIdCandidates.find((candidate) => typeof candidate === "string" && candidate.trim())
+
+	if (!resolvedId) {
+		return null
+	}
+
+	return {
+		...record,
+		id: resolvedId,
+	}
 }
 
 const toRawRecordArray = (value: unknown): RawPaymentRecord[] | null => {
@@ -217,6 +243,10 @@ const extractRawPayments = (payload: unknown): RawPaymentRecord[] => {
 		payload.records,
 		payload.results,
 		payload.items,
+		payload.content,
+		payload.payload,
+		payload.response,
+		payload.responseObject,
 	]
 
 	for (const candidate of topLevelCandidates) {
@@ -234,6 +264,10 @@ const extractRawPayments = (payload: unknown): RawPaymentRecord[] => {
 			nestedData.records,
 			nestedData.results,
 			nestedData.items,
+			nestedData.content,
+			nestedData.payload,
+			nestedData.response,
+			nestedData.responseObject,
 		]
 
 		for (const candidate of nestedCandidates) {
@@ -247,6 +281,17 @@ const extractRawPayments = (payload: unknown): RawPaymentRecord[] => {
 	const singleRecord = toRawRecord(payload)
 	if (singleRecord) {
 		return [singleRecord]
+	}
+
+	const emptyCollectionHints = [
+		payload.total,
+		payload.count,
+		isObject(payload.data) ? (payload.data as JsonObject).total : undefined,
+		isObject(payload.data) ? (payload.data as JsonObject).count : undefined,
+	]
+
+	if (emptyCollectionHints.some((candidate) => candidate === 0 || candidate === "0")) {
+		return []
 	}
 
 	throw new Error("Unexpected payments API response format")
@@ -310,35 +355,36 @@ const normalizeMethod = (rawMethod: string | null | undefined): PaymentMethod =>
 }
 
 const normalizePaymentRecord = (record: RawPaymentRecord): Transaction => {
-	const sourceStatus = normalizeKey(record.status) || "CREATED"
-	const sourcePaymentMethod = normalizeKey(record.paymentMethod) || "UNKNOWN"
+	const sourceStatus = normalizeKey(record.status || record.paymentStatus) || "CREATED"
+	const sourcePaymentMethod = normalizeKey(record.paymentMethod || record.method) || "UNKNOWN"
 	const metadata = record.metadata ?? null
 	const bookingIdFromPayload = normalizeText(record.bookingId)
+	const bookingIdFromAlternateField = normalizeText(record.appointmentId)
 	const bookingIdFromMetadata = normalizeText(metadata?.appointmentId)
-	const bookingId = bookingIdFromPayload || bookingIdFromMetadata || null
-	const createdAt = normalizeText(record.createdAt) || new Date().toISOString()
+	const bookingId = bookingIdFromPayload || bookingIdFromAlternateField || bookingIdFromMetadata || null
+	const createdAt = normalizeText(record.createdAt || record.created_at) || new Date().toISOString()
 	const pspReference = normalizeText(record.pspReference) || null
 	const pspPaymentId = normalizeText(record.pspPaymentId) || null
 	const transactionId = pspReference || pspPaymentId || `${record.id.slice(0, 12)}`
 
 	return {
 		id: record.id,
-		bookingId,
+		bookingId: bookingId || bookingIdFromAlternateField || null,
 		userId: normalizeText(record.userId) || null,
 		amount: parseAmount(record.amount),
 		currency: normalizeText(record.currency) || "LKR",
-		psp: normalizeText(record.psp) || null,
+		psp: normalizeText(record.psp || record.gateway || record.provider) || null,
 		pspPaymentId,
 		pspReference,
-		paymentMethod: normalizeMethod(record.paymentMethod),
+		paymentMethod: normalizeMethod(record.paymentMethod || record.method),
 		sourcePaymentMethod,
-		status: normalizeStatus(record.status),
+		status: normalizeStatus(record.status || record.paymentStatus),
 		sourceStatus,
 		metadata,
 		transactionId,
 		createdAt,
-		updatedAt: normalizeText(record.updatedAt) || createdAt,
-		expiresAt: normalizeText(record.expiresAt) || null,
+		updatedAt: normalizeText(record.updatedAt || record.updated_at) || createdAt,
+		expiresAt: normalizeText(record.expiresAt || record.expires_at) || null,
 		appointment: bookingId
 			? {
 					id: bookingId,
@@ -348,11 +394,9 @@ const normalizePaymentRecord = (record: RawPaymentRecord): Transaction => {
 	}
 }
 
-const getAuthHeaders = (): HeadersInit => {
-	const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
+const getPaymentHeaders = (): HeadersInit => {
 	return {
-		"Content-Type": "application/json",
-		...(token ? { Authorization: `Bearer ${token}` } : {}),
+		Accept: "application/json",
 	}
 }
 
@@ -459,7 +503,8 @@ const fetchPayments = async (forceRefresh = false): Promise<Transaction[]> => {
 
 	const response = await fetch(PAYMENT_API_URL, {
 		method: "GET",
-		headers: getAuthHeaders(),
+		headers: getPaymentHeaders(),
+		cache: "no-store",
 	})
 
 	const responseText = await response.text()
@@ -778,4 +823,3 @@ export const paymentApi = {
 		return [header.map((value) => escapeCsvValue(value)).join(","), ...rows.map((row) => row.join(","))].join("\n")
 	},
 }
-

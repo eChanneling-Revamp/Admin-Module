@@ -1,7 +1,6 @@
 interface LoginCredentials {
   username: string
   password: string
-  twoFA: string
 }
 
 interface LoginResponse {

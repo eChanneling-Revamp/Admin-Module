@@ -11,7 +11,6 @@ const loginSchema = z.object({
   body: z.object({
     username: z.string().min(1, 'Username is required'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
-    twoFA: z.string().length(6, '2FA code must be 6 digits'),
   }),
 });
 
@@ -61,13 +60,13 @@ export class AuthController {
   private authService = new AuthService();
 
   login = asyncHandler(async (req: Request, res: Response) => {
-    const { username, password, twoFA } = req.body;
+    const { username, password } = req.body;
     const ipAddress = req.ip;
     const userAgent = req.get('User-Agent');
 
     try {
       const result = await this.authService.login(
-        { username, password, twoFA },
+        { username, password },
         ipAddress,
         userAgent
       );

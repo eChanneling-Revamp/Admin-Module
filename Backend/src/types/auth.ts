@@ -3,7 +3,6 @@ import { UserRole } from '@prisma/client';
 export interface LoginRequest {
   username: string;
   password: string;
-  twoFA: string;
 }
 
 export interface RegisterRequest {

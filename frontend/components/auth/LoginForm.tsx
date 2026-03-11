@@ -15,13 +15,11 @@ import Link from "next/link"
 interface FormErrors {
   username?: string
   password?: string
-  twoFA?: string
 }
 
 export function LoginForm() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [twoFA, setTwoFA] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
@@ -40,12 +38,6 @@ export function LoginForm() {
       newErrors.password = "Password is required"
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters"
-    }
-
-    if (!twoFA.trim()) {
-      newErrors.twoFA = "2FA code is required"
-    } else if (!/^\d{6}$/.test(twoFA)) {
-      newErrors.twoFA = "2FA code must be 6 digits"
     }
 
     setErrors(newErrors)
@@ -67,7 +59,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const response = await loginService({ username, password, twoFA })
+      const response = await loginService({ username, password })
 
       if (response.success && response.token && response.user) {
         login(response.token, response.user)
@@ -133,25 +125,6 @@ export function LoginForm() {
           required
           disabled={isLoading}
         />
-
-        {/* 2FA Code Field */}
-        <div>
-          <InputField
-            id="twoFA"
-            label="2FA Code"
-            type="text"
-            value={twoFA}
-            onChange={setTwoFA}
-            placeholder="6-digit code"
-            error={errors.twoFA}
-            required
-            disabled={isLoading}
-            maxLength={6}
-          />
-          <p className="text-[10px] text-gray-400 mt-0.5 ml-1">
-            From your authenticator app
-          </p>
-        </div>
 
         {/* Login Button */}
         <Button

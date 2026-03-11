@@ -19,7 +19,7 @@ export class AuthService {
   private auditService = new AuditService();
 
   async login(loginData: LoginRequest, ipAddress?: string, userAgent?: string): Promise<AuthResponse> {
-    const { username, password, twoFA } = loginData;
+    const { username, password } = loginData;
 
     logger.info(`Login attempt with username: ${username}`);
 
@@ -50,11 +50,6 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
-    }
-
-    // Verify 2FA code (simple validation - accept 123456 for now)
-    if (twoFA !== '123456') {
-      throw new Error('Invalid 2FA code');
     }
 
     // Update last login

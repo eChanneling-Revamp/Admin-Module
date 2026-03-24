@@ -7,20 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Download, Filter, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { userApi, type User } from "@/lib/api/userApi"
-import { doctorApi, type Doctor } from "@/lib/api/doctorApi"
-import { agentApi, type Agent } from "@/lib/api/agentApi"
-
-interface ActivityLog {
-  id: string
-  user: string
-  action: string
-  resource: string
-  timestamp: string
-  isoTimestamp: string
-  ip: string // We don't have real IP, so we might mock or omit
-  status: "Success" | "Failed"
-}
+import { fetchActivityFeed, type ActivityLog } from "@/lib/activityFeed"
 
 export default function UserActivityPage() {
   const [logs, setLogs] = useState<ActivityLog[]>([])
@@ -36,90 +23,9 @@ export default function UserActivityPage() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [usersData, doctors, agentsData] = await Promise.all([
-          userApi.getAll({ limit: 100, sortOrder: 'desc', sortBy: 'createdAt' }),
-          doctorApi.getAll(),
-          agentApi.getAll({ limit: 100, sortOrder: 'desc', sortBy: 'createdAt' })
-        ])
-
-        const users = usersData.users
-        const agents = agentsData.agents
-
-        const activities: ActivityLog[] = []
-
-        // Process Users (Registration & Login)
-        users.forEach(user => {
-          // Registration event
-          activities.push({
-            id: `user-create-${user.id}`,
-            user: user.name || user.email,
-            action: "User Registered",
-            resource: "System",
-            timestamp: new Date(user.createdAt).toLocaleString(),
-            isoTimestamp: user.createdAt,
-            ip: "192.168.x.x",
-            status: "Success"
-          })
-
-          // Last login event (if available)
-          if (user.lastLoginAt) {
-            activities.push({
-              id: `user-login-${user.id}`,
-              user: user.name || user.email,
-              action: "User Login",
-              resource: "Admin Portal",
-              timestamp: new Date(user.lastLoginAt).toLocaleString(),
-              isoTimestamp: user.lastLoginAt,
-              ip: "192.168.x.x",
-              status: "Success"
-            })
-          }
-        })
-
-        // Process Doctors (Onboarding)
-        doctors.forEach(doctor => {
-          activities.push({
-            id: `doc-create-${doctor.id}`,
-            user: "Admin", // Assuming admin adds doctors
-            action: "Doctor Onboarded",
-            resource: `Dr. ${doctor.name}`,
-            timestamp: new Date(doctor.createdAt).toLocaleString(),
-            isoTimestamp: doctor.createdAt,
-            ip: "192.168.x.x",
-            status: "Success"
-          })
-        })
-
-        // Process Agents (Registration)
-        agents.forEach(agent => {
-          activities.push({
-            id: `agent-create-${agent.id}`,
-            user: "Admin",
-            action: "Agent Registered",
-            resource: agent.name,
-            timestamp: new Date(agent.createdAt).toLocaleString(),
-            isoTimestamp: agent.createdAt,
-            ip: "192.168.x.x",
-            status: "Success"
-          })
-        })
-
-        // Sort by timestamp descending
-        activities.sort((a, b) => new Date(b.isoTimestamp).getTime() - new Date(a.isoTimestamp).getTime())
-
-        setLogs(activities)
-
-        // Calculate Stats
-        const today = new Date().toISOString().split('T')[0]
-        const activeUsers = users.filter(u => u.lastLoginAt && u.lastLoginAt.startsWith(today)).length
-
-        setStats({
-          total: activities.length,
-          successful: activities.filter(a => a.status === 'Success').length,
-          failed: activities.filter(a => a.status === 'Failed').length,
-          activeToday: activeUsers
-        })
-
+        const data = await fetchActivityFeed()
+        setLogs(data.activities)
+        setStats(data.stats)
       } catch (error) {
         console.error("Failed to fetch activity logs", error)
       } finally {
@@ -128,6 +34,9 @@ export default function UserActivityPage() {
     }
 
     fetchData()
+    const intervalId = window.setInterval(fetchData, 60000)
+
+    return () => window.clearInterval(intervalId)
   }, [])
 
   if (loading) {

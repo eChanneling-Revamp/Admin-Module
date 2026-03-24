@@ -1,14 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -19,8 +17,6 @@ import {
   User,
   Settings,
   Search,
-  Moon,
-  Sun,
   ChevronDown,
   Calendar,
   CheckCircle2,
@@ -28,32 +24,46 @@ import {
   Info,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-
-interface Notification {
-  id: string
-  title: string
-  message: string
-  time: string
-  type: "success" | "warning" | "info"
-  read: boolean
-}
-
-const notifications: Notification[] = [
-  { id: "1", title: "New appointment", message: "Patient ID: PT-1001 booked", time: "2 min ago", type: "success", read: false },
-  { id: "2", title: "Schedule updated", message: "Dr. Smith's schedule changed", time: "1 hour ago", type: "info", read: false },
-  { id: "3", title: "Payment failed", message: "Transaction #TXN-4521 failed", time: "3 hours ago", type: "warning", read: true },
-]
+import { fetchActivityFeed, mapActivitiesToNotifications, type TopBarNotification } from "@/lib/activityFeed"
 
 export function TopBar() {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [notifications, setNotifications] = useState<TopBarNotification[]>([])
+  const [readIds, setReadIds] = useState<string[]>([])
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  useEffect(() => {
+    const storedReadIds = window.localStorage.getItem("topbar-notification-read-ids")
+    if (storedReadIds) {
+      setReadIds(JSON.parse(storedReadIds))
+    }
+
+    const loadNotifications = async () => {
+      try {
+        const data = await fetchActivityFeed()
+        setNotifications(mapActivitiesToNotifications(data.activities))
+      } catch (error) {
+        console.error("Failed to fetch top bar notifications", error)
+      }
+    }
+
+    loadNotifications()
+    const intervalId = window.setInterval(loadNotifications, 60000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  const unreadCount = notifications.filter((notification) => !readIds.includes(notification.id)).length
 
   const handleLogout = () => {
     logout()
     router.push("/login")
+  }
+
+  const markAllAsRead = () => {
+    const allIds = notifications.map((notification) => notification.id)
+    setReadIds(allIds)
+    window.localStorage.setItem("topbar-notification-read-ids", JSON.stringify(allIds))
   }
 
   const getInitials = (firstName?: string, lastName?: string, name?: string) => {
@@ -139,35 +149,45 @@ export function TopBar() {
           <DropdownMenuContent align="end" className="w-96 p-0 rounded-2xl shadow-xl border-emerald-100">
             <div className="flex items-center justify-between p-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-blue-50">
               <h3 className="font-semibold text-slate-800">Notifications</h3>
-              <button className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
+              <button
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                onClick={markAllAsRead}
+                type="button"
+              >
                 Mark all as read
               </button>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`flex gap-3 p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition-colors cursor-pointer ${!notification.read ? "bg-emerald-50/30" : ""
-                    }`}
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800">{notification.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{notification.message}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{notification.time}</p>
-                  </div>
-                  {!notification.read && (
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
-                  )}
+              {notifications.length > 0 ? (
+                notifications.map((notification) => {
+                  const isRead = readIds.includes(notification.id)
+
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`flex gap-3 p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition-colors cursor-pointer ${!isRead ? "bg-emerald-50/30" : ""}`}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800">{notification.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{notification.message}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{notification.time}</p>
+                      </div>
+                      {!isRead && (
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
+                      )}
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="p-6 text-sm text-slate-500 text-center">
+                  No recent user activity notifications
                 </div>
-              ))}
+              )}
             </div>
             <div className="p-3 border-t border-emerald-100">
-              <button className="w-full py-2 text-sm text-center text-emerald-600 hover:text-emerald-700 font-medium hover:bg-emerald-50 rounded-lg transition-colors">
-                View all notifications
-              </button>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -208,10 +228,6 @@ export function TopBar() {
                 </div>
               </div>
             </div>
-            <DropdownMenuItem className="cursor-pointer p-3 rounded-xl hover:bg-emerald-50 transition-colors">
-              <User className="w-4 h-4 mr-3 text-emerald-600" />
-              <span className="text-sm text-slate-700">View Profile</span>
-            </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer p-3 rounded-xl hover:bg-emerald-50 transition-colors">
               <Settings className="w-4 h-4 mr-3 text-emerald-600" />
               <span className="text-sm text-slate-700">Account Settings</span>

@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Bell,
   LogOut,
-  User,
   Settings,
   Search,
   ChevronDown,
@@ -22,11 +21,18 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { fetchActivityFeed, mapActivitiesToNotifications, type TopBarNotification } from "@/lib/activityFeed"
 
-export function TopBar() {
+interface TopBarProps {
+  isSidebarCollapsed: boolean
+  onToggleSidebar: () => void
+}
+
+export function TopBar({ isSidebarCollapsed, onToggleSidebar }: TopBarProps) {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [notifications, setNotifications] = useState<TopBarNotification[]>([])
@@ -87,9 +93,12 @@ export function TopBar() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "success": return <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-      case "warning": return <AlertCircle className="w-4 h-4 text-amber-500" />
-      default: return <Info className="w-4 h-4 text-blue-500" />
+      case "success":
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+      case "warning":
+        return <AlertCircle className="w-4 h-4 text-amber-500" />
+      default:
+        return <Info className="w-4 h-4 text-blue-500" />
     }
   }
 
@@ -101,10 +110,19 @@ export function TopBar() {
   })
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-emerald-100 flex items-center justify-between px-6 fixed top-0 right-0 left-72 z-40 shadow-sm">
-      {/* Left Section - Search & Date */}
+    <header
+      className={`h-16 bg-white/95 backdrop-blur-md border-b border-emerald-100 flex items-center justify-between px-6 fixed top-0 right-0 z-40 shadow-sm transition-[left] duration-300 ease-in-out ${isSidebarCollapsed ? "left-20" : "left-72"}`}
+    >
       <div className="flex items-center gap-6">
-        {/* Search Bar */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="w-10 h-10 rounded-xl border border-emerald-200 bg-white flex items-center justify-center text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-colors shadow-sm"
+          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+        </button>
+
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -113,30 +131,17 @@ export function TopBar() {
             className="w-80 pl-10 pr-4 py-2 bg-emerald-50/50 border border-emerald-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
           />
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 rounded border border-emerald-200">
-            ⌘K
+            Ctrl K
           </kbd>
         </div>
 
-        {/* Date Display */}
         <div className="hidden lg:flex items-center gap-2 text-sm text-slate-500">
           <Calendar className="w-4 h-4 text-emerald-600" />
           <span>{currentDate}</span>
         </div>
       </div>
 
-      {/* Right Section */}
       <div className="flex items-center gap-2">
-        {/* Theme Toggle */}
-        {/* <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="w-10 h-10 rounded-xl hover:bg-emerald-50 text-slate-500 hover:text-emerald-600"
-        >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </Button> */}
-
-        {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 transition-all outline-none focus:ring-2 focus:ring-emerald-200 cursor-pointer">
             <Bell className="w-5 h-5" />
@@ -175,27 +180,20 @@ export function TopBar() {
                         <p className="text-xs text-slate-500 mt-0.5">{notification.message}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{notification.time}</p>
                       </div>
-                      {!isRead && (
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
-                      )}
+                      {!isRead && <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />}
                     </div>
                   )
                 })
               ) : (
-                <div className="p-6 text-sm text-slate-500 text-center">
-                  No recent user activity notifications
-                </div>
+                <div className="p-6 text-sm text-slate-500 text-center">No recent user activity notifications</div>
               )}
             </div>
-            <div className="p-3 border-t border-emerald-100">
-            </div>
+            <div className="p-3 border-t border-emerald-100"></div>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Divider */}
         <div className="w-px h-8 bg-emerald-200/50 mx-2" />
 
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-3 px-3 py-2 h-auto rounded-xl hover:bg-emerald-50 transition-all outline-none focus:ring-2 focus:ring-emerald-200 cursor-pointer">
             <Avatar className="h-9 w-9 ring-2 ring-emerald-200">
